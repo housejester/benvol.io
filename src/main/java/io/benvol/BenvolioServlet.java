@@ -62,10 +62,10 @@ class BenvolioServlet extends HttpServlet {
     }
 
     private void process(final String method, final HttpServletRequest request, final HttpServletResponse response) {
+        final AsyncContext ctx = request.startAsync();
         _threadPool.execute(new Runnable() {
             @Override
             public void run() {
-                AsyncContext ctx = request.startAsync();
                 ctx.getResponse().setContentType("application/json");
                 try (final PrintWriter w = ctx.getResponse().getWriter()) {
                     w.printf(""); // TODO

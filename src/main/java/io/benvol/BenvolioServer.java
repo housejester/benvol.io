@@ -3,11 +3,14 @@ package io.benvol;
 import io.benvol.config.LoggingConfig;
 
 import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
 
 import org.apache.log4j.Logger;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.servlet.ServletContextHandler;
 import org.eclipse.jetty.servlet.ServletHolder;
+import org.elasticsearch.common.base.Throwables;
 import org.joda.time.DateTime;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -31,11 +34,8 @@ public class BenvolioServer extends Thread {
     
     public static void main(String[] args) throws Throwable {
         
-        // Read the configuration and use it to configure the server 
-        File configFile = new File(args[0]);
-        ObjectMapper objectMapper = new ObjectMapper();
-        ObjectNode config = (ObjectNode) objectMapper.readTree(configFile);
-        BenvolioSettings settings = new BenvolioSettings(config);
+        // Load the server configuration settings 
+        BenvolioSettings settings = loadSettings();
 
         // Configure the LOG4J system
         LoggingConfig.configure(settings.getEnvironment());
@@ -45,6 +45,19 @@ public class BenvolioServer extends Thread {
         // Create the server and start it running.
         BenvolioServer server = new BenvolioServer(settings);
         server.run();
+    }
+
+    private static BenvolioSettings loadSettings() {
+        BenvolioSettings settings = null;
+        try {
+            InputStream stream = BenvolioServer.class.getResourceAsStream("/benvolio.config.json");
+            ObjectMapper objectMapper = new ObjectMapper();
+            ObjectNode config = (ObjectNode) objectMapper.readTree(stream);
+            settings = new BenvolioSettings(config);
+        } catch (Throwable t) {
+            Throwables.propagate(t);
+        }
+        return settings;
     }
 
     @Override

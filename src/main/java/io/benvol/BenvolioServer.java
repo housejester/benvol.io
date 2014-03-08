@@ -2,8 +2,6 @@ package io.benvol;
 
 import io.benvol.config.LoggingConfig;
 
-import java.io.File;
-import java.io.IOException;
 import java.io.InputStream;
 
 import org.apache.log4j.Logger;

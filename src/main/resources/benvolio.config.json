@@ -1,0 +1,7 @@
+{
+	"environment" : "local",
+	"thread_pool_size" : 10,
+	"server" : {
+		"port" : 9876
+	}
+}

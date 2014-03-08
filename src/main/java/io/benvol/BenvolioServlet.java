@@ -68,7 +68,7 @@ class BenvolioServlet extends HttpServlet {
             public void run() {
                 ctx.getResponse().setContentType("application/json");
                 try (final PrintWriter w = ctx.getResponse().getWriter()) {
-                    w.printf(""); // TODO
+                    w.printf("method: %s, path: %s, query: %s", method, request.getPathInfo(), request.getQueryString()); // TODO
                 } catch (IOException e) {
                     LOG.error(e);
                 }

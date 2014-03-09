@@ -38,7 +38,7 @@ public class BenvolioSettings {
 
         // Elastic hostnames and ports
         List<KeyValuePair<String, Integer>> elasticHosts = Lists.newArrayList();
-        for (JsonNode node : ((ArrayNode) json.get("elastic").get("hosts"))) {
+        for (JsonNode node : ((ArrayNode) json.get("elastic").get("nodes"))) {
             String hostname = node.get("hostname").asText();
             int restPort = node.get("rest_port").asInt();
             elasticHosts.add(new KeyValuePair<>(hostname, restPort));

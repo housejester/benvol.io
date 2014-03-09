@@ -5,8 +5,10 @@
 		"port" : 9876
 	},
 	"elastic" : {
-		"hostname" : "localhost",
-		"rest_port" : 9200,
+		"nodes" : [{
+			"hostname" : "localhost",
+			"rest_port" : 9200
+		}]
 		"index_names" : [
 		  "myindex"
 		],

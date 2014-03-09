@@ -12,13 +12,16 @@ public class AuthRequest {
         _identifyPredicates = IdentifyPredicate.fromHeaders(headers);
         _confirmPredicates = ConfirmPredicate.fromHeaders(headers);
     }
-    
+
+    public boolean isAnonymous() {
+        return _identifyPredicates.isEmpty();
+    }
+
     public List<IdentifyPredicate> getIdentifyPredicates() {
         return _identifyPredicates;
     }
-    
+
     public List<ConfirmPredicate> getConfirmPredicates() {
         return _confirmPredicates;
     }
-
 }

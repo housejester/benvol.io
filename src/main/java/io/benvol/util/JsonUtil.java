@@ -3,10 +3,9 @@ package io.benvol.util;
 import java.util.Collections;
 import java.util.List;
 
-import org.elasticsearch.common.collect.Lists;
-
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.google.common.collect.Lists;
 
 public class JsonUtil {
 

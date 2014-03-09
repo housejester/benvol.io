@@ -9,11 +9,10 @@ import io.benvol.util.KeyValuePair;
 import java.util.Collections;
 import java.util.List;
 
-import org.elasticsearch.common.collect.Lists;
-
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.google.common.collect.Lists;
 
 public class BenvolioSettings {
 

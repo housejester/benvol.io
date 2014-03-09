@@ -3,7 +3,7 @@ package io.benvol.model.auth;
 import java.util.List;
 import java.util.Map;
 
-import org.elasticsearch.common.collect.Lists;
+import com.google.common.collect.Lists;
 
 public class IdentifyPredicate {
     

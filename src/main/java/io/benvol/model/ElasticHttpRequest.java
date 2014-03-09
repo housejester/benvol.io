@@ -7,7 +7,7 @@ import java.util.List;
 
 import javax.servlet.http.HttpServletRequest;
 
-import org.elasticsearch.common.collect.Lists;
+import com.google.common.collect.Lists;
 
 public class ElasticHttpRequest extends StandardHttpRequest {
 

@@ -68,6 +68,7 @@ class BenvolioServlet extends HttpServlet {
         final AsyncContext ctx = request.startAsync();
         _threadPool.execute(new Runnable() {
             public void run() {
+                ElasticRequest elasticRequest = new ElasticRequest(method, request);
                 ctx.getResponse().setContentType("application/json");
                 try (final PrintWriter w = ctx.getResponse().getWriter()) {
                     w.printf("method: %s, path: %s, query: %s", method, request.getPathInfo(), request.getQueryString()); // TODO

@@ -19,9 +19,9 @@ import org.apache.log4j.Logger;
 
 @SuppressWarnings("serial")
 class BenvolioServlet extends HttpServlet {
-    
+
     private static final Logger LOG = Logger.getLogger(BenvolioServlet.class);
-    
+
     private static final String UNSUPPORTED_HTTP_KIND = "Unsupported HTTP method kind: %s";
 
     private final ExecutorService _threadPool;
@@ -49,23 +49,37 @@ class BenvolioServlet extends HttpServlet {
     public void doDelete(HttpServletRequest request, HttpServletResponse response) throws IOException, ServletException {
         process(HttpKind.DELETE, request, response);
     }
-    
+
     @Override
     public void doHead(HttpServletRequest request, HttpServletResponse response) throws IOException, ServletException {
         response.sendError(HttpServletResponse.SC_BAD_REQUEST, String.format(UNSUPPORTED_HTTP_KIND, HttpKind.HEAD));
     }
-    
+
     @Override
     public void doTrace(HttpServletRequest request, HttpServletResponse response) throws IOException, ServletException {
         response.sendError(HttpServletResponse.SC_BAD_REQUEST, String.format(UNSUPPORTED_HTTP_KIND, HttpKind.TRACE));
     }
-    
+
     @Override
     public void doOptions(HttpServletRequest request, HttpServletResponse response) throws IOException, ServletException {
         response.sendError(HttpServletResponse.SC_BAD_REQUEST, String.format(UNSUPPORTED_HTTP_KIND, HttpKind.OPTIONS));
     }
 
-    private void process(final HttpKind httpKind, final HttpServletRequest request, final HttpServletResponse response) {
+    private void process(
+        final HttpKind httpKind,
+        final HttpServletRequest request,
+        final HttpServletResponse response
+    ) throws IOException, ServletException {
+
+        // Executing GET requests in a browser usually results in a bunch of favicon requests
+        // hitting the API. Prevent these (as well as robots.txt requests) from hitting any
+        // of the API code, which won't be able to make sense of them.
+        final String path = request.getPathInfo();
+        if (path.endsWith("favicon.ico") || path.endsWith("robots.txt")) {
+            response.sendError(HttpServletResponse.SC_NOT_FOUND, "");
+        }
+
+        // Create an asynchronous context and enqueue this request into the thread pool
         final AsyncContext ctx = request.startAsync();
         _threadPool.execute(new Runnable() {
             public void run() {
@@ -73,7 +87,7 @@ class BenvolioServlet extends HttpServlet {
                 AuthDirective authDirective = elasticHttpRequest.getAuthDirective();
                 ctx.getResponse().setContentType("application/json");
                 try (final PrintWriter w = ctx.getResponse().getWriter()) {
-                    w.printf("HttpKind: %s, path: %s, query: %s", httpKind, request.getPathInfo(), request.getQueryString()); // TODO
+                    w.printf("HttpKind: %s, path: %s, query: %s", httpKind, path, request.getQueryString()); // TODO
                 } catch (IOException e) {
                     LOG.error(e);
                 }

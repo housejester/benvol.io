@@ -26,6 +26,8 @@ public enum ElasticOperator {
     MLT,
 
     // META-API STUFF
+    ROOT,
+    PLUGIN,
     MAPPING_GET,
     MAPPING_PUT,
     MAPPING_DELETE
@@ -41,6 +43,9 @@ public enum ElasticOperator {
     }
 
     public static ElasticOperator infer(HttpKind httpKind, String[] pathParts, Map<String, String[]> params) {
+        if (HttpKind.GET.equals(httpKind) && pathParts.length == 0) {
+            return ROOT;
+        }
         for (String pathPart : pathParts) {
             if (pathPart.startsWith("_")) {
                 if (pathPart.equals("_mapping")) {

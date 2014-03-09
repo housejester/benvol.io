@@ -1,51 +1,51 @@
 {
-	"environment" : "local",
-	"thread_pool_size" : 10,
-	"server" : {
-		"port" : 9876
-	},
-	"elastic" : {
-		"nodes" : [{
-			"hostname" : "localhost",
-			"rest_port" : 9200
-		}]
-		"index_names" : [
-		  "myindex"
-		],
-		"auth" : {
-			"user" : {
-				"type_name" : "user",
-				"id_field_name" : "id",
-				"id_field_kind" : "string",
-				"identity_fields" : [
-				  "id",
-				  "email",
-				  "username"
-				],
-				"role_ids_field_name" : "role_ids",
-				"group_ids_field_name" : "group_ids",
-				"passhash_field_name" : "passhash",
-				"salt_field_name" : "salt"
-			},
-            "group" : {
-                "type_name" : "group",
-                "id_field_name" : "id",
+  "environment" : "local",
+  "thread_pool_size" : 10,
+  "server" : {
+    "port" : 9876
+  },
+  "elastic" : {
+    "nodes" : [{
+      "hostname" : "localhost",
+      "rest_port" : 9200
+    }],
+    "index_names" : [
+      "myindex"
+    ],
+    "auth" : {
+      "user" : {
+        "type_name" : "user",
+        "id_field_name" : "id",
+        "id_field_kind" : "string",
+        "identity_fields" : [
+          "id",
+          "email",
+          "username"
+        ],
+        "role_ids_field_name" : "role_ids",
+        "group_ids_field_name" : "group_ids",
+        "passhash_field_name" : "passhash",
+        "salt_field_name" : "salt"
+      },
+      "group" : {
+        "type_name" : "group",
+        "id_field_name" : "id",
+        "id_field_kind" : "string",
+        "role_ids_field_name" : "role_ids"
+      },
+      "session" : {
+        "type_name" : "session",
+        "id_field_name" : "id",
                 "id_field_kind" : "string",
-                "role_ids_field_name" : "role_ids"
-            },
-			"session" : {
-				"type_name" : "session",
-				"id_field_name" : "id",
-                "id_field_kind" : "string",
-				"user_id_field_name" : "user_id",
-				"token_field_name" : "token"
-			},
-            "role" : {
-                "type_name" : "role",
-                "id_field_name" : "id",
-                "id_field_kind" : "string",
-                "name_field_name" : "name"
-            }
-		}
-	}
+        "user_id_field_name" : "user_id",
+        "token_field_name" : "token"
+      },
+      "role" : {
+        "type_name" : "role",
+        "id_field_name" : "id",
+        "id_field_kind" : "string",
+        "name_field_name" : "name"
+      }
+    }
+  }
 }

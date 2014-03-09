@@ -17,8 +17,8 @@ public class ElasticHttpRequest extends StandardHttpRequest {
     private final AuthDirective _authDirective;
     private final ElasticOperator _operator;
 
-    public ElasticHttpRequest(HttpMethod httpMethod, HttpServletRequest request) {
-        super(httpMethod, request);
+    public ElasticHttpRequest(HttpKind httpKind, HttpServletRequest request) {
+        super(httpKind, request);
 
         // Use the HTTP path to determine the index and type names. The first path-part represents
         // one or more index names, while the second path-part represents one or more type names.
@@ -30,8 +30,8 @@ public class ElasticHttpRequest extends StandardHttpRequest {
         _authDirective = new AuthDirective(super.getHeaders());
 
         // Determining the ElasticOperator can be tricky, since it relies on an
-        // interplay between the http method, path, and querystring params.
-        _operator = ElasticOperator.infer(httpMethod, pathParts, super.getParams());
+        // interplay between the http kind, path, and querystring params.
+        _operator = ElasticOperator.infer(httpKind, pathParts, super.getParams());
     }
 
     public List<String> getIndexNames() {

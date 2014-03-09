@@ -1,6 +1,6 @@
 package io.benvol.model;
 
-public enum HttpMethod {
+public enum HttpKind {
     GET, POST, PUT, DELETE,
     HEAD, TRACE, OPTIONS
 }

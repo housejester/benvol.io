@@ -1,7 +1,7 @@
 package io.benvol;
 
 import io.benvol.model.ElasticHttpRequest;
-import io.benvol.model.HttpMethod;
+import io.benvol.model.HttpKind;
 import io.benvol.model.auth.AuthDirective;
 
 import java.io.IOException;
@@ -22,7 +22,7 @@ class BenvolioServlet extends HttpServlet {
     
     private static final Logger LOG = Logger.getLogger(BenvolioServlet.class);
     
-    private static final String UNSUPPORTED_HTTP_METHOD = "Unsupported HTTP method: %s";
+    private static final String UNSUPPORTED_HTTP_KIND = "Unsupported HTTP method kind: %s";
 
     private final ExecutorService _threadPool;
 
@@ -32,48 +32,48 @@ class BenvolioServlet extends HttpServlet {
 
     @Override
     public void doGet(HttpServletRequest request, HttpServletResponse response) throws IOException, ServletException {
-        process(HttpMethod.GET, request, response);
+        process(HttpKind.GET, request, response);
     }
 
     @Override
     public void doPost(HttpServletRequest request, HttpServletResponse response) throws IOException, ServletException {
-        process(HttpMethod.POST, request, response);
+        process(HttpKind.POST, request, response);
     }
 
     @Override
     public void doPut(HttpServletRequest request, HttpServletResponse response) throws IOException, ServletException {
-        process(HttpMethod.PUT, request, response);
+        process(HttpKind.PUT, request, response);
     }
 
     @Override
     public void doDelete(HttpServletRequest request, HttpServletResponse response) throws IOException, ServletException {
-        process(HttpMethod.DELETE, request, response);
+        process(HttpKind.DELETE, request, response);
     }
     
     @Override
     public void doHead(HttpServletRequest request, HttpServletResponse response) throws IOException, ServletException {
-        response.sendError(HttpServletResponse.SC_BAD_REQUEST, String.format(UNSUPPORTED_HTTP_METHOD, HttpMethod.HEAD));
+        response.sendError(HttpServletResponse.SC_BAD_REQUEST, String.format(UNSUPPORTED_HTTP_KIND, HttpKind.HEAD));
     }
     
     @Override
     public void doTrace(HttpServletRequest request, HttpServletResponse response) throws IOException, ServletException {
-        response.sendError(HttpServletResponse.SC_BAD_REQUEST, String.format(UNSUPPORTED_HTTP_METHOD, HttpMethod.TRACE));
+        response.sendError(HttpServletResponse.SC_BAD_REQUEST, String.format(UNSUPPORTED_HTTP_KIND, HttpKind.TRACE));
     }
     
     @Override
     public void doOptions(HttpServletRequest request, HttpServletResponse response) throws IOException, ServletException {
-        response.sendError(HttpServletResponse.SC_BAD_REQUEST, String.format(UNSUPPORTED_HTTP_METHOD, HttpMethod.OPTIONS));
+        response.sendError(HttpServletResponse.SC_BAD_REQUEST, String.format(UNSUPPORTED_HTTP_KIND, HttpKind.OPTIONS));
     }
 
-    private void process(final HttpMethod method, final HttpServletRequest request, final HttpServletResponse response) {
+    private void process(final HttpKind httpKind, final HttpServletRequest request, final HttpServletResponse response) {
         final AsyncContext ctx = request.startAsync();
         _threadPool.execute(new Runnable() {
             public void run() {
-                ElasticHttpRequest elasticHttpRequest = new ElasticHttpRequest(method, request);
+                ElasticHttpRequest elasticHttpRequest = new ElasticHttpRequest(httpKind, request);
                 AuthDirective authDirective = elasticHttpRequest.getAuthDirective();
                 ctx.getResponse().setContentType("application/json");
                 try (final PrintWriter w = ctx.getResponse().getWriter()) {
-                    w.printf("method: %s, path: %s, query: %s", method, request.getPathInfo(), request.getQueryString()); // TODO
+                    w.printf("HttpKind: %s, path: %s, query: %s", httpKind, request.getPathInfo(), request.getQueryString()); // TODO
                 } catch (IOException e) {
                     LOG.error(e);
                 }

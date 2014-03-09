@@ -40,22 +40,22 @@ public enum ElasticOperator {
         return valueOf(string);
     }
 
-    public static ElasticOperator infer(HttpMethod httpMethod, String[] pathParts, Map<String, String[]> params) {
+    public static ElasticOperator infer(HttpKind httpKind, String[] pathParts, Map<String, String[]> params) {
         for (String pathPart : pathParts) {
             if (pathPart.startsWith("_")) {
                 if (pathPart.equals("_mapping")) {
-                    if (HttpMethod.PUT.equals(httpMethod) || HttpMethod.POST.equals(httpMethod)) {
+                    if (HttpKind.PUT.equals(httpKind) || HttpKind.POST.equals(httpKind)) {
                         return MAPPING_PUT;
-                    } else if (HttpMethod.GET.equals(httpMethod)) {
+                    } else if (HttpKind.GET.equals(httpKind)) {
                         return MAPPING_GET;
-                    } else if (HttpMethod.DELETE.equals(httpMethod)) {
+                    } else if (HttpKind.DELETE.equals(httpKind)) {
                         return MAPPING_DELETE;
                     }
                 }
                 return parse(pathPart);
             }
         }
-        if (HttpMethod.DELETE.equals(httpMethod)) {
+        if (HttpKind.DELETE.equals(httpKind)) {
             return DELETE;
         }
         throw new RuntimeException("INTERNAL ERROR: can't determine the ElasticOperation for query");

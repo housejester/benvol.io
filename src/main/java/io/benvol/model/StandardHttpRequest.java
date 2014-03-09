@@ -14,7 +14,7 @@ import com.google.common.io.CharStreams;
 
 public class StandardHttpRequest {
 
-    private final HttpMethod _httpMethod;
+    private final HttpKind _httpKind;
     private final String _path;
 
     private final String _queryString;
@@ -23,8 +23,8 @@ public class StandardHttpRequest {
 
     private final String _requestBody;
 
-    public StandardHttpRequest(HttpMethod httpMethod, HttpServletRequest request) {
-        _httpMethod = httpMethod;
+    public StandardHttpRequest(HttpKind httpKind, HttpServletRequest request) {
+        _httpKind = httpKind;
         _queryString = request.getQueryString();
         _path = request.getPathInfo();
 
@@ -40,8 +40,8 @@ public class StandardHttpRequest {
         );
     }
 
-    public HttpMethod getHttpMethod() {
-        return _httpMethod;
+    public HttpKind getHttpKind() {
+        return _httpKind;
     }
 
     public String getPath() {

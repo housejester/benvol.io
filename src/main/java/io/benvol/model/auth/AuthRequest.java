@@ -1,0 +1,24 @@
+package io.benvol.model.auth;
+
+import java.util.List;
+import java.util.Map;
+
+public class AuthRequest {
+    
+    private List<IdentifyPredicate> _identifyPredicates;
+    private List<ConfirmPredicate> _confirmPredicates;
+    
+    public AuthRequest(Map<String, String[]> headers) {
+        _identifyPredicates = IdentifyPredicate.fromHeaders(headers);
+        _confirmPredicates = ConfirmPredicate.fromHeaders(headers);
+    }
+    
+    public List<IdentifyPredicate> getIdentifyPredicates() {
+        return _identifyPredicates;
+    }
+    
+    public List<ConfirmPredicate> getConfirmPredicates() {
+        return _confirmPredicates;
+    }
+
+}

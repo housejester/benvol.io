@@ -1,5 +1,7 @@
 package io.benvol.model;
 
+import io.benvol.model.auth.AuthRequest;
+
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -13,6 +15,7 @@ public class ElasticHttpRequest extends StandardHttpRequest {
     private final List<String> _indexNames;
     private final List<String> _typeNames;
     
+    private final AuthRequest _authRequest;
     private final ElasticOperator _operator;
     
     public ElasticHttpRequest(HttpMethod httpMethod, HttpServletRequest request) {
@@ -23,6 +26,9 @@ public class ElasticHttpRequest extends StandardHttpRequest {
         String[] pathParts = super.getPath().split("/");
         _indexNames = parseCommaDelimitedNames(pathParts, 0);
         _typeNames = parseCommaDelimitedNames(pathParts, 1);
+        
+        // Build an AuthRequest from the http request headers.
+        _authRequest = new AuthRequest(super.getHeaders());
         
         // Determining the ElasticOperator can be tricky, since it relies on an
         // interplay between the http method, path, and querystring params.

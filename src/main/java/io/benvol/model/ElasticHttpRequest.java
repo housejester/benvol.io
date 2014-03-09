@@ -4,20 +4,19 @@ import io.benvol.model.auth.AuthRequest;
 
 import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 
 import javax.servlet.http.HttpServletRequest;
 
 import org.elasticsearch.common.collect.Lists;
 
 public class ElasticHttpRequest extends StandardHttpRequest {
-    
+
     private final List<String> _indexNames;
     private final List<String> _typeNames;
-    
+
     private final AuthRequest _authRequest;
     private final ElasticOperator _operator;
-    
+
     public ElasticHttpRequest(HttpMethod httpMethod, HttpServletRequest request) {
         super(httpMethod, request);
 
@@ -26,13 +25,29 @@ public class ElasticHttpRequest extends StandardHttpRequest {
         String[] pathParts = super.getPath().split("/");
         _indexNames = parseCommaDelimitedNames(pathParts, 0);
         _typeNames = parseCommaDelimitedNames(pathParts, 1);
-        
+
         // Build an AuthRequest from the http request headers.
         _authRequest = new AuthRequest(super.getHeaders());
-        
+
         // Determining the ElasticOperator can be tricky, since it relies on an
         // interplay between the http method, path, and querystring params.
         _operator = ElasticOperator.infer(httpMethod, pathParts, super.getParams());
+    }
+
+    public List<String> getIndexNames() {
+        return _indexNames;
+    }
+
+    public List<String> getTypeNames() {
+        return _typeNames;
+    }
+
+    public ElasticOperator getElasticOperator() {
+        return _operator;
+    }
+
+    public AuthRequest getAuthRequest() {
+        return _authRequest;
     }
 
     private static List<String> parseCommaDelimitedNames(String[] pathParts, int index) {
@@ -49,5 +64,5 @@ public class ElasticHttpRequest extends StandardHttpRequest {
         }
         return Collections.emptyList();
     }
-    
+
 }

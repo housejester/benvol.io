@@ -3,12 +3,12 @@ package io.benvol.model.auth;
 import java.util.List;
 import java.util.Map;
 
-public class AuthRequest {
+public class AuthDirective {
     
     private List<IdentifyPredicate> _identifyPredicates;
     private List<ConfirmPredicate> _confirmPredicates;
     
-    public AuthRequest(Map<String, String[]> headers) {
+    public AuthDirective(Map<String, String[]> headers) {
         _identifyPredicates = IdentifyPredicate.fromHeaders(headers);
         _confirmPredicates = ConfirmPredicate.fromHeaders(headers);
     }

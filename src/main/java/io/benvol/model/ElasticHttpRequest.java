@@ -1,6 +1,6 @@
 package io.benvol.model;
 
-import io.benvol.model.auth.AuthRequest;
+import io.benvol.model.auth.AuthDirective;
 
 import java.util.Collections;
 import java.util.List;
@@ -14,7 +14,7 @@ public class ElasticHttpRequest extends StandardHttpRequest {
     private final List<String> _indexNames;
     private final List<String> _typeNames;
 
-    private final AuthRequest _authRequest;
+    private final AuthDirective _authDirective;
     private final ElasticOperator _operator;
 
     public ElasticHttpRequest(HttpMethod httpMethod, HttpServletRequest request) {
@@ -26,8 +26,8 @@ public class ElasticHttpRequest extends StandardHttpRequest {
         _indexNames = parseCommaDelimitedNames(pathParts, 0);
         _typeNames = parseCommaDelimitedNames(pathParts, 1);
 
-        // Build an AuthRequest from the http request headers.
-        _authRequest = new AuthRequest(super.getHeaders());
+        // Build an AuthDirective from the http request headers.
+        _authDirective = new AuthDirective(super.getHeaders());
 
         // Determining the ElasticOperator can be tricky, since it relies on an
         // interplay between the http method, path, and querystring params.
@@ -46,8 +46,8 @@ public class ElasticHttpRequest extends StandardHttpRequest {
         return _operator;
     }
 
-    public AuthRequest getAuthRequest() {
-        return _authRequest;
+    public AuthDirective getAuthDirective() {
+        return _authDirective;
     }
 
     private static List<String> parseCommaDelimitedNames(String[] pathParts, int index) {

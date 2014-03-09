@@ -1,24 +1,28 @@
 package io.benvol.model.query;
 
 import io.benvol.BenvolioSettings;
+import io.benvol.model.auth.remote.GroupRemoteSchema;
+import io.benvol.model.auth.remote.RoleRemoteSchema;
+import io.benvol.model.auth.remote.SessionRemoteSchema;
+import io.benvol.model.auth.remote.UserRemoteSchema;
 
 import java.util.List;
 
 public class QueryFactory {
-    
+
     private final List<String> _indexNames;
 
-    private final String _userType;
-    private final String _groupType;
-    private final String _sessionType;
-    private final String _roleType;
-    
+    private final UserRemoteSchema _userRemoteSchema;
+    private final GroupRemoteSchema _groupRemoteSchema;
+    private final SessionRemoteSchema _sessionRemoteSchema;
+    private final RoleRemoteSchema _roleRemoteSchema;
+
     public QueryFactory(BenvolioSettings settings) {
         _indexNames = settings.getIndexNames();
-        _userType = settings.getUserTypeName();
-        _groupType = settings.getGroupTypeName();
-        _sessionType = settings.getSessionTypeName();
-        _roleType = settings.getRoleTypeName();
+        _userRemoteSchema = settings.getUserRemoteSchema();
+        _groupRemoteSchema = settings.getGroupRemoteSchema();
+        _sessionRemoteSchema = settings.getSessionRemoteSchema();
+        _roleRemoteSchema = settings.getRoleRemoteSchema();
     }
 
 }

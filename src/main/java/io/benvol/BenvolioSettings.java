@@ -1,5 +1,9 @@
 package io.benvol;
 
+import io.benvol.model.auth.remote.GroupRemoteSchema;
+import io.benvol.model.auth.remote.RoleRemoteSchema;
+import io.benvol.model.auth.remote.SessionRemoteSchema;
+import io.benvol.model.auth.remote.UserRemoteSchema;
 import io.benvol.util.KeyValuePair;
 
 import java.util.Collections;
@@ -21,10 +25,10 @@ public class BenvolioSettings {
 
     private final List<String> _indexNames;
 
-    private final String _userTypeName;
-    private final String _sessionTypeName;
-    private final String _groupTypeName;
-    private final String _roleTypeName;
+    private final UserRemoteSchema _userRemoteSchema;
+    private final GroupRemoteSchema _groupRemoteSchema;
+    private final SessionRemoteSchema _sessionRemoteSchema;
+    private final RoleRemoteSchema _roleRemoteSchema;
 
     public BenvolioSettings(ObjectNode json) {
 
@@ -50,10 +54,11 @@ public class BenvolioSettings {
         _indexNames = Collections.unmodifiableList(indexNames);
 
         // Well-known types in the authentication system
-        _userTypeName = json.get("elastic").get("auth").get("user").get("type_name").asText();
-        _sessionTypeName = json.get("elastic").get("auth").get("session").get("type_name").asText();
-        _groupTypeName = json.get("elastic").get("auth").get("group").get("type_name").asText();
-        _roleTypeName = json.get("elastic").get("auth").get("role").get("type_name").asText();
+        JsonNode remoteSchemas = json.get("elastic").get("auth");
+        _userRemoteSchema = UserRemoteSchema.fromConfigJson(remoteSchemas.get("user"));
+        _groupRemoteSchema = GroupRemoteSchema.fromConfigJson(remoteSchemas.get("group"));
+        _sessionRemoteSchema = SessionRemoteSchema.fromConfigJson(remoteSchemas.get("session"));
+        _roleRemoteSchema = RoleRemoteSchema.fromConfigJson(remoteSchemas.get("role"));
     }
 
     public String getEnvironment() {
@@ -76,20 +81,20 @@ public class BenvolioSettings {
         return _indexNames;
     }
 
-    public String getUserTypeName() {
-        return _userTypeName;
+    public UserRemoteSchema getUserRemoteSchema() {
+        return _userRemoteSchema;
     }
 
-    public String getSessionTypeName() {
-        return _sessionTypeName;
+    public SessionRemoteSchema getSessionRemoteSchema() {
+        return _sessionRemoteSchema;
     }
 
-    public String getGroupTypeName() {
-        return _groupTypeName;
+    public GroupRemoteSchema getGroupRemoteSchema() {
+        return _groupRemoteSchema;
     }
 
-    public String getRoleTypeName() {
-        return _roleTypeName;
+    public RoleRemoteSchema getRoleRemoteSchema() {
+        return _roleRemoteSchema;
     }
 
 }

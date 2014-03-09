@@ -1,7 +1,11 @@
 package io.benvol.model.auth.remote;
 
+import io.benvol.util.JsonUtil;
+
 import java.util.Collections;
 import java.util.List;
+
+import com.fasterxml.jackson.databind.JsonNode;
 
 public class UserRemoteSchema extends AbstractRemoteSchema {
 
@@ -48,5 +52,18 @@ public class UserRemoteSchema extends AbstractRemoteSchema {
 
     public String getSaltFieldName() {
         return _saltFieldName;
+    }
+
+    public static UserRemoteSchema fromConfigJson(JsonNode json) {
+        return new UserRemoteSchema(
+            json.get("type_name").asText(),
+            json.get("id_field_name").asText(),
+            json.get("id_field_kind").asText(),
+            JsonUtil.getStringListForKey(json, "identity_fields"),
+            json.get("role_ids_field_name").asText(),
+            json.get("group_ids_field_name").asText(),
+            json.get("passhash_field_name").asText(),
+            json.get("salt_field_name").asText()
+        );
     }
 }

@@ -5,7 +5,7 @@ import java.util.Map;
 import com.google.common.base.Preconditions;
 
 public enum ElasticOperator {
-    
+
     // FROM THE DOCUMENT API: http://www.elasticsearch.org/guide/en/elasticsearch/reference/current/docs.html
     INDEX,
     GET,
@@ -15,7 +15,7 @@ public enum ElasticOperator {
     BULK,
     TERMVECTOR,
     MTERMVECTOR,
-    
+
     // FROM THE SEARCH API: http://www.elasticsearch.org/guide/en/elasticsearch/reference/current/search.html
     SEARCH,
     COUNT,
@@ -24,7 +24,7 @@ public enum ElasticOperator {
     EXPLAIN,
     PERCOLATE,
     MLT,
-    
+
     // META-API STUFF
     MAPPING_GET,
     MAPPING_PUT,

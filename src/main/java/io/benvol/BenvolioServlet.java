@@ -2,6 +2,7 @@ package io.benvol;
 
 import io.benvol.model.ElasticHttpRequest;
 import io.benvol.model.HttpMethod;
+import io.benvol.model.auth.AuthRequest;
 
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -69,6 +70,7 @@ class BenvolioServlet extends HttpServlet {
         _threadPool.execute(new Runnable() {
             public void run() {
                 ElasticHttpRequest elasticHttpRequest = new ElasticHttpRequest(method, request);
+                AuthRequest authRequest = elasticHttpRequest.getAuthRequest();
                 ctx.getResponse().setContentType("application/json");
                 try (final PrintWriter w = ctx.getResponse().getWriter()) {
                     w.printf("method: %s, path: %s, query: %s", method, request.getPathInfo(), request.getQueryString()); // TODO

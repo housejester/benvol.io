@@ -77,6 +77,7 @@ class BenvolioServlet extends HttpServlet {
         final String path = request.getServletPath();
         if (path.endsWith("favicon.ico") || path.endsWith("robots.txt")) {
             response.sendError(HttpServletResponse.SC_NOT_FOUND, "");
+            return;
         }
 
         // Create an asynchronous context and enqueue this request into the thread pool

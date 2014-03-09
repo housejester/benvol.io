@@ -12,7 +12,7 @@ import org.elasticsearch.common.base.Throwables;
 import com.google.common.collect.Maps;
 import com.google.common.io.CharStreams;
 
-public class ElasticRequest {
+public class StandardHttpRequest {
     
     private final HttpMethod _httpMethod;
     private final String _path;
@@ -22,7 +22,7 @@ public class ElasticRequest {
 
     private final String _requestBody;
 
-    public ElasticRequest(HttpMethod httpMethod, HttpServletRequest request) {
+    public StandardHttpRequest(HttpMethod httpMethod, HttpServletRequest request) {
         _httpMethod = httpMethod;
         _path = request.getPathInfo();
         

@@ -1,6 +1,6 @@
 package io.benvol;
 
-import io.benvol.model.StandardHttpRequest;
+import io.benvol.model.ElasticHttpRequest;
 import io.benvol.model.HttpMethod;
 
 import java.io.IOException;
@@ -68,7 +68,7 @@ class BenvolioServlet extends HttpServlet {
         final AsyncContext ctx = request.startAsync();
         _threadPool.execute(new Runnable() {
             public void run() {
-                StandardHttpRequest elasticRequest = new StandardHttpRequest(method, request);
+                ElasticHttpRequest elasticHttpRequest = new ElasticHttpRequest(method, request);
                 ctx.getResponse().setContentType("application/json");
                 try (final PrintWriter w = ctx.getResponse().getWriter()) {
                     w.printf("method: %s, path: %s, query: %s", method, request.getPathInfo(), request.getQueryString()); // TODO

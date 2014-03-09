@@ -32,7 +32,7 @@ public class ElasticHttpRequest extends StandardHttpRequest {
         
         // Determining the ElasticOperator can be tricky, since it relies on an
         // interplay between the http method, path, and querystring params.
-        _operator = getElasticOperator(httpMethod, pathParts, super.getParams());
+        _operator = ElasticOperator.infer(httpMethod, pathParts, super.getParams());
     }
 
     private static List<String> parseCommaDelimitedNames(String[] pathParts, int index) {
@@ -48,27 +48,6 @@ public class ElasticHttpRequest extends StandardHttpRequest {
             }
         }
         return Collections.emptyList();
-    }
-
-    private static ElasticOperator getElasticOperator(HttpMethod httpMethod, String[] pathParts, Map<String, String[]> params) {
-        for (String pathPart : pathParts) {
-            if (pathPart.startsWith("_")) {
-                if (pathPart.equals("_mapping")) {
-                    if (HttpMethod.PUT.equals(httpMethod) || HttpMethod.POST.equals(httpMethod)) {
-                        return ElasticOperator.MAPPING_PUT;
-                    } else if (HttpMethod.GET.equals(httpMethod)) {
-                        return ElasticOperator.MAPPING_GET;
-                    } else if (HttpMethod.DELETE.equals(httpMethod)) {
-                        return ElasticOperator.MAPPING_DELETE;
-                    }
-                }
-                return ElasticOperator.parse(pathPart);
-            }
-        }
-        if (HttpMethod.DELETE.equals(httpMethod)) {
-            return ElasticOperator.DELETE;
-        }
-        throw new RuntimeException("INTERNAL ERROR: can't determine the ElasticOperation for query");
     }
     
 }

@@ -1,5 +1,7 @@
 package io.benvol.model;
 
+import java.util.Map;
+
 import com.google.common.base.Preconditions;
 
 public enum ElasticOperator {
@@ -36,5 +38,26 @@ public enum ElasticOperator {
         }
         string = string.toUpperCase();
         return valueOf(string);
+    }
+
+    public static ElasticOperator infer(HttpMethod httpMethod, String[] pathParts, Map<String, String[]> params) {
+        for (String pathPart : pathParts) {
+            if (pathPart.startsWith("_")) {
+                if (pathPart.equals("_mapping")) {
+                    if (HttpMethod.PUT.equals(httpMethod) || HttpMethod.POST.equals(httpMethod)) {
+                        return MAPPING_PUT;
+                    } else if (HttpMethod.GET.equals(httpMethod)) {
+                        return MAPPING_GET;
+                    } else if (HttpMethod.DELETE.equals(httpMethod)) {
+                        return MAPPING_DELETE;
+                    }
+                }
+                return parse(pathPart);
+            }
+        }
+        if (HttpMethod.DELETE.equals(httpMethod)) {
+            return DELETE;
+        }
+        throw new RuntimeException("INTERNAL ERROR: can't determine the ElasticOperation for query");
     }
 }

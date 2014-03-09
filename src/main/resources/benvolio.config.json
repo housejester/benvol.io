@@ -3,5 +3,31 @@
 	"thread_pool_size" : 10,
 	"server" : {
 		"port" : 9876
+	},
+	"elastic" : {
+		"hostname" : "localhost",
+		"rest_port" : 9200,
+		"index_names" : [
+		  "myindex"
+		],
+		"auth" : {
+			"user" : {
+				"type_name" : "user",
+				"id_field_name" : "id",
+				"identity_fields" : [
+				  "id",
+				  "email",
+				  "username"
+				],
+				"passhash_field_name" : "passhash",
+				"salt_field_name" : "salt"
+			},
+			"session" : {
+				"type_name" : "session",
+				"id_field_name" : "id",
+				"user_id_field_name" : "user_id",
+				"token_field_name" : "token"
+			}
+		}
 	}
 }

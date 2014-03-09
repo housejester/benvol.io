@@ -25,7 +25,7 @@ public class StandardHttpRequest {
     public StandardHttpRequest(HttpKind httpKind, HttpServletRequest request) {
         _httpKind = httpKind;
         _queryString = request.getQueryString();
-        _path = request.getPathInfo();
+        _path = request.getServletPath();
 
         _params = request.getParameterMap();
         _headers = readHeaders(request);

@@ -22,7 +22,7 @@ public class ElasticHttpRequest extends StandardHttpRequest {
 
         // Use the HTTP path to determine the index and type names. The first path-part represents
         // one or more index names, while the second path-part represents one or more type names.
-        String[] pathParts = super.getPath().split("/");
+        String[] pathParts = parsePathIntoParts(super.getPath());
         _indexNames = parseCommaDelimitedNames(pathParts, 0);
         _typeNames = parseCommaDelimitedNames(pathParts, 1);
 
@@ -48,6 +48,19 @@ public class ElasticHttpRequest extends StandardHttpRequest {
 
     public AuthDirective getAuthDirective() {
         return _authDirective;
+    }
+
+    private static String[] parsePathIntoParts(String path) {
+        if (path == null) {
+            return new String[0];
+        }
+        if (path.startsWith("/")) {
+            path = path.substring(1);
+        }
+        if (path.isEmpty()) {
+            return new String[0];
+        }
+        return path.split("/");
     }
 
     private static List<String> parseCommaDelimitedNames(String[] pathParts, int index) {

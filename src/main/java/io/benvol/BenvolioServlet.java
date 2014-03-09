@@ -74,7 +74,7 @@ class BenvolioServlet extends HttpServlet {
         // Executing GET requests in a browser usually results in a bunch of favicon requests
         // hitting the API. Prevent these (as well as robots.txt requests) from hitting any
         // of the API code, which won't be able to make sense of them.
-        final String path = request.getPathInfo();
+        final String path = request.getServletPath();
         if (path.endsWith("favicon.ico") || path.endsWith("robots.txt")) {
             response.sendError(HttpServletResponse.SC_NOT_FOUND, "");
         }

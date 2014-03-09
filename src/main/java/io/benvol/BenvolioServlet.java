@@ -1,5 +1,8 @@
 package io.benvol;
 
+import io.benvol.model.ElasticRequest;
+import io.benvol.model.HttpMethod;
+
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.concurrent.ExecutorService;
@@ -28,43 +31,42 @@ class BenvolioServlet extends HttpServlet {
 
     @Override
     public void doGet(HttpServletRequest request, HttpServletResponse response) throws IOException, ServletException {
-        process("GET", request, response);
+        process(HttpMethod.GET, request, response);
     }
 
     @Override
     public void doPost(HttpServletRequest request, HttpServletResponse response) throws IOException, ServletException {
-        process("POST", request, response);
+        process(HttpMethod.POST, request, response);
     }
 
     @Override
     public void doPut(HttpServletRequest request, HttpServletResponse response) throws IOException, ServletException {
-        process("PUT", request, response);
+        process(HttpMethod.PUT, request, response);
     }
 
     @Override
     public void doDelete(HttpServletRequest request, HttpServletResponse response) throws IOException, ServletException {
-        process("DELETE", request, response);
+        process(HttpMethod.DELETE, request, response);
     }
     
     @Override
     public void doHead(HttpServletRequest request, HttpServletResponse response) throws IOException, ServletException {
-        response.sendError(HttpServletResponse.SC_BAD_REQUEST, String.format(UNSUPPORTED_HTTP_METHOD, "HEAD"));
+        response.sendError(HttpServletResponse.SC_BAD_REQUEST, String.format(UNSUPPORTED_HTTP_METHOD, HttpMethod.HEAD));
     }
     
     @Override
     public void doTrace(HttpServletRequest request, HttpServletResponse response) throws IOException, ServletException {
-        response.sendError(HttpServletResponse.SC_BAD_REQUEST, String.format(UNSUPPORTED_HTTP_METHOD, "TRACE"));
+        response.sendError(HttpServletResponse.SC_BAD_REQUEST, String.format(UNSUPPORTED_HTTP_METHOD, HttpMethod.TRACE));
     }
     
     @Override
     public void doOptions(HttpServletRequest request, HttpServletResponse response) throws IOException, ServletException {
-        response.sendError(HttpServletResponse.SC_BAD_REQUEST, String.format(UNSUPPORTED_HTTP_METHOD, "OPTIONS"));
+        response.sendError(HttpServletResponse.SC_BAD_REQUEST, String.format(UNSUPPORTED_HTTP_METHOD, HttpMethod.OPTIONS));
     }
 
-    private void process(final String method, final HttpServletRequest request, final HttpServletResponse response) {
+    private void process(final HttpMethod method, final HttpServletRequest request, final HttpServletResponse response) {
         final AsyncContext ctx = request.startAsync();
         _threadPool.execute(new Runnable() {
-            @Override
             public void run() {
                 ctx.getResponse().setContentType("application/json");
                 try (final PrintWriter w = ctx.getResponse().getWriter()) {

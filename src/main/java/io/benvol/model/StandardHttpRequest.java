@@ -13,10 +13,11 @@ import com.google.common.collect.Maps;
 import com.google.common.io.CharStreams;
 
 public class StandardHttpRequest {
-    
+
     private final HttpMethod _httpMethod;
     private final String _path;
 
+    private final String _queryString;
     private final Map<String, String[]> _params;
     private final Map<String, String[]> _headers;
 
@@ -24,29 +25,41 @@ public class StandardHttpRequest {
 
     public StandardHttpRequest(HttpMethod httpMethod, HttpServletRequest request) {
         _httpMethod = httpMethod;
+        _queryString = request.getQueryString();
         _path = request.getPathInfo();
-        
+
         _params = request.getParameterMap();
         _headers = readHeaders(request);
         _requestBody = readRequestBody(request);
     }
-    
+
+    public String makeUrl(String hostname, int port) {
+        return String.format(
+            "https://%s:%s/%s?%s",
+            hostname, port, _path, _queryString
+        );
+    }
+
     public HttpMethod getHttpMethod() {
         return _httpMethod;
     }
-    
+
     public String getPath() {
         return _path;
     }
-    
+
+    public String getQueryString() {
+        return _queryString;
+    }
+
     public Map<String, String[]> getParams() {
         return _params;
     }
-    
+
     public Map<String, String[]> getHeaders() {
         return _headers;
     }
-    
+
     public String getRequestBody() {
         return _requestBody;
     }

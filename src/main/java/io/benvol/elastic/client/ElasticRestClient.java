@@ -24,8 +24,6 @@ import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.log4j.Logger;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.base.Charsets;
 import com.google.common.io.CharStreams;
 
@@ -33,15 +31,13 @@ public class ElasticRestClient {
 
     private static final Logger LOG = Logger.getLogger(ElasticRestClient.class);
 
-    private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
-
     private final List<KeyValuePair<String, Integer>> _elasticHosts;
 
     public ElasticRestClient(BenvolioSettings settings) {
         _elasticHosts = settings.getElasticHosts();
     }
 
-    public ElasticHttpResponse execute(ElasticHttpRequest request) {
+    public void execute(ElasticHttpRequest request, ElasticResponseCallback callback) {
         KeyValuePair<String, Integer> host = chooseElasticHost();
         String url = request.makeUrl(host.getKey(), host.getValue());
 
@@ -78,7 +74,8 @@ public class ElasticRestClient {
                         InputStreamReader reader = new InputStreamReader(content, Charsets.UTF_8);
                         String responseBody = CharStreams.toString(reader);
 
-                        return new ElasticHttpResponse(request, status, headers, responseBody);
+                        // Let the callback process the response data
+                        callback.execute(new ElasticHttpResponse(request, status, headers, responseBody));
                     }
                 }
             }

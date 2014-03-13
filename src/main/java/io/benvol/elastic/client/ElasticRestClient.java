@@ -13,7 +13,10 @@ import org.apache.commons.httpclient.HttpException;
 import org.apache.commons.httpclient.HttpMethod;
 import org.apache.commons.httpclient.HttpStatus;
 import org.apache.commons.httpclient.MultiThreadedHttpConnectionManager;
+import org.apache.commons.httpclient.methods.DeleteMethod;
 import org.apache.commons.httpclient.methods.GetMethod;
+import org.apache.commons.httpclient.methods.PostMethod;
+import org.apache.commons.httpclient.methods.PutMethod;
 import org.apache.log4j.Logger;
 
 import com.fasterxml.jackson.databind.JsonNode;
@@ -38,7 +41,14 @@ public class ElasticRestClient {
         KeyValuePair<String, Integer> host = chooseElasticHost();
         String url = request.makeUrl(host.getKey(), host.getValue());
         HttpClient client = new HttpClient(CONNECTION_MANAGER);
-        HttpMethod method = new GetMethod(url);
+        HttpMethod method;
+        switch (request.getHttpKind()) {
+            case GET: method = new GetMethod(url); break;
+            case POST: method = new PostMethod(url); break;
+            case PUT: method = new PutMethod(url); break;
+            case DELETE: method = new DeleteMethod(url); break;
+            default: throw new RuntimeException("unsupported HttpKind: " + request.getHttpKind());
+        }
         InputStream inputStream = null;
         try {
             int status = client.executeMethod(method);

@@ -8,31 +8,30 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.List;
 
-import org.apache.commons.httpclient.HttpClient;
-import org.apache.commons.httpclient.HttpMethod;
-import org.apache.commons.httpclient.HttpStatus;
-import org.apache.commons.httpclient.MultiThreadedHttpConnectionManager;
-import org.apache.commons.httpclient.methods.DeleteMethod;
-import org.apache.commons.httpclient.methods.GetMethod;
-import org.apache.commons.httpclient.methods.PostMethod;
-import org.apache.commons.httpclient.methods.PutMethod;
+import org.apache.http.HttpEntity;
+import org.apache.http.HttpStatus;
+import org.apache.http.StatusLine;
+import org.apache.http.client.methods.CloseableHttpResponse;
+import org.apache.http.client.methods.HttpDelete;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.client.methods.HttpPut;
+import org.apache.http.client.methods.HttpUriRequest;
+import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.impl.client.HttpClients;
 import org.apache.log4j.Logger;
 
-import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import com.google.common.base.Throwables;
 
 public class ElasticRestClient {
 
     private static final Logger LOG = Logger.getLogger(ElasticRestClient.class);
-    
-    private static final MultiThreadedHttpConnectionManager CONNECTION_MANAGER = new MultiThreadedHttpConnectionManager();
-    
+
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
-    
+
     private final List<KeyValuePair<String, Integer>> _elasticHosts;
-    
+
     public ElasticRestClient(BenvolioSettings settings) {
         _elasticHosts = settings.getElasticHosts();
     }
@@ -40,35 +39,38 @@ public class ElasticRestClient {
     public ObjectNode execute(ElasticHttpRequest request) {
         KeyValuePair<String, Integer> host = chooseElasticHost();
         String url = request.makeUrl(host.getKey(), host.getValue());
-        HttpClient client = new HttpClient(CONNECTION_MANAGER);
-        HttpMethod method;
-        switch (request.getHttpKind()) {
-            case GET: method = new GetMethod(url); break;
-            case POST: method = new PostMethod(url); break;
-            case PUT: method = new PutMethod(url); break;
-            case DELETE: method = new DeleteMethod(url); break;
-            default: throw new RuntimeException("unsupported HttpKind: " + request.getHttpKind());
-        }
-        try {
-            ObjectNode json = null;
-            int status = client.executeMethod(method);
-            if (status == HttpStatus.SC_OK) {
-                try (InputStream inputStream = method.getResponseBodyAsStream()) {
-                    json = (ObjectNode) OBJECT_MAPPER.readValue(inputStream, JsonNode.class);
+
+        try (CloseableHttpClient httpClient = HttpClients.createDefault()) {
+
+            // Create an appropriate kind of HTTP request
+            HttpUriRequest method;
+            switch (request.getHttpKind()) {
+                case GET: method = new HttpGet(url); break;
+                case POST: method = new HttpPost(url); break;
+                case PUT: method = new HttpPut(url); break;
+                case DELETE: method = new HttpDelete(url); break;
+                default: throw new RuntimeException("unsupported HttpKind: " + request.getHttpKind());
+            }
+
+            // Execute the request and generate the response
+            try (CloseableHttpResponse response = httpClient.execute(method)) {
+
+                // Check the response status
+                StatusLine status = response.getStatusLine();
+                if (status.getStatusCode() != HttpStatus.SC_OK) {
+                    throw new RuntimeException("handle all non-ok status codes"); // TODO
                 }
-            } else {
-                LOG.error(String.format("HTTP status code %s from ElasticSearch on request: %s", status, url));
+
+                // Get the response body
+                HttpEntity entity = response.getEntity();
+                try (InputStream content = entity.getContent()) {
+                    return (ObjectNode) OBJECT_MAPPER.readTree(content);
+                }
             }
-            return json;
         } catch (IOException e) {
-            Throwables.propagate(e);
-        } finally {
-            try {
-                if (method != null) method.releaseConnection();
-            } catch (Throwable t) {
-                LOG.error(t);
-            }
+            LOG.error(e);
         }
+
         return null;
     }
 

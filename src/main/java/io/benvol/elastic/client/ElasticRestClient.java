@@ -9,7 +9,6 @@ import java.io.InputStream;
 import java.util.List;
 
 import org.apache.commons.httpclient.HttpClient;
-import org.apache.commons.httpclient.HttpException;
 import org.apache.commons.httpclient.HttpMethod;
 import org.apache.commons.httpclient.HttpStatus;
 import org.apache.commons.httpclient.MultiThreadedHttpConnectionManager;
@@ -22,6 +21,7 @@ import org.apache.log4j.Logger;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.google.common.base.Throwables;
 
 public class ElasticRestClient {
 
@@ -49,26 +49,20 @@ public class ElasticRestClient {
             case DELETE: method = new DeleteMethod(url); break;
             default: throw new RuntimeException("unsupported HttpKind: " + request.getHttpKind());
         }
-        InputStream inputStream = null;
         try {
+            ObjectNode json = null;
             int status = client.executeMethod(method);
             if (status == HttpStatus.SC_OK) {
-                inputStream = method.getResponseBodyAsStream();
-                ObjectNode json = (ObjectNode) OBJECT_MAPPER.readValue(inputStream, JsonNode.class);
-                return json;
+                try (InputStream inputStream = method.getResponseBodyAsStream()) {
+                    json = (ObjectNode) OBJECT_MAPPER.readValue(inputStream, JsonNode.class);
+                }
             } else {
                 LOG.error(String.format("HTTP status code %s from ElasticSearch on request: %s", status, url));
             }
-        } catch (HttpException e) {
-            LOG.error(String.format("HttpException from request: %s", url), e);
+            return json;
         } catch (IOException e) {
-            LOG.error(String.format("IOException from request: %s", url), e);
+            Throwables.propagate(e);
         } finally {
-            try {
-                if (inputStream != null) inputStream.close();
-            } catch (Throwable t) {
-                LOG.error(t);
-            }
             try {
                 if (method != null) method.releaseConnection();
             } catch (Throwable t) {

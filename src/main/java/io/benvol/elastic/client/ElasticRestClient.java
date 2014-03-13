@@ -2,12 +2,15 @@ package io.benvol.elastic.client;
 
 import io.benvol.BenvolioSettings;
 import io.benvol.model.ElasticHttpRequest;
+import io.benvol.model.ElasticHttpResponse;
 import io.benvol.util.KeyValuePair;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.util.List;
 
+import org.apache.http.Header;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpStatus;
 import org.apache.http.StatusLine;
@@ -23,6 +26,8 @@ import org.apache.log4j.Logger;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.google.common.base.Charsets;
+import com.google.common.io.CharStreams;
 
 public class ElasticRestClient {
 
@@ -36,7 +41,7 @@ public class ElasticRestClient {
         _elasticHosts = settings.getElasticHosts();
     }
 
-    public ObjectNode execute(ElasticHttpRequest request) {
+    public ElasticHttpResponse execute(ElasticHttpRequest request) {
         KeyValuePair<String, Integer> host = chooseElasticHost();
         String url = request.makeUrl(host.getKey(), host.getValue());
 
@@ -61,17 +66,25 @@ public class ElasticRestClient {
                     throw new RuntimeException("handle all non-ok status codes"); // TODO
                 }
 
-                // Get the response body
+                // Get all the response headers
+                Header[] headers = response.getAllHeaders();
+
+                // Get the response body as a string
                 HttpEntity entity = response.getEntity();
-                try (InputStream content = entity.getContent()) {
-                    return (ObjectNode) OBJECT_MAPPER.readTree(content);
+                if (entity.getContentLength() > 0) {
+                    try (InputStream content = entity.getContent()) {
+
+                        // NOTE: ElasticSearch only produces UTF8
+                        InputStreamReader reader = new InputStreamReader(content, Charsets.UTF_8);
+                        String responseBody = CharStreams.toString(reader);
+
+                        return new ElasticHttpResponse(request, status, headers, responseBody);
+                    }
                 }
             }
         } catch (IOException e) {
             LOG.error(e);
         }
-
-        return null;
     }
 
     private KeyValuePair<String, Integer> chooseElasticHost() {

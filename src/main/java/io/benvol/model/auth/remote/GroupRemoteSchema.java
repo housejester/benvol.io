@@ -1,7 +1,5 @@
 package io.benvol.model.auth.remote;
 
-import io.benvol.util.JsonUtil;
-
 import com.fasterxml.jackson.databind.JsonNode;
 
 public class GroupRemoteSchema extends AbstractRemoteSchema {

@@ -1,9 +1,5 @@
 package io.benvol.model.auth.remote;
 
-import java.util.Arrays;
-import java.util.List;
-
-import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
 public class AbstractRemoteModel {

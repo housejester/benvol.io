@@ -1,8 +1,10 @@
 package io.benvol;
 
+import io.benvol.elastic.client.ElasticRestClient;
 import io.benvol.model.ElasticHttpRequest;
 import io.benvol.model.HttpKind;
 import io.benvol.model.auth.AuthDirective;
+import io.benvol.model.auth.AuthUser;
 
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -25,9 +27,11 @@ class BenvolioServlet extends HttpServlet {
     private static final String UNSUPPORTED_HTTP_KIND = "Unsupported HTTP method kind: %s";
 
     private final ExecutorService _threadPool;
+    private final ElasticRestClient _elasticRestClient;
 
     public BenvolioServlet(BenvolioSettings settings) {
-        _threadPool = Executors.newFixedThreadPool(settings.getThreadPoolSize());
+        _threadPool = Executors.newFixedThreadPool(settings.getThreadPoolSize());;
+        _elasticRestClient = new ElasticRestClient(settings);
     }
 
     @Override
@@ -84,8 +88,26 @@ class BenvolioServlet extends HttpServlet {
         final AsyncContext ctx = request.startAsync();
         _threadPool.execute(new Runnable() {
             public void run() {
+
+                // Interpret this query as an ElasticSearch operation with a corresponding authentication directive.
                 ElasticHttpRequest elasticHttpRequest = new ElasticHttpRequest(httpKind, request);
                 AuthDirective authDirective = elasticHttpRequest.getAuthDirective();
+
+                if (authDirective.isAnonymous()) {
+                    // TODO: implement anonymous requests
+                    try {
+                        ((HttpServletResponse) ctx.getResponse()).sendError(
+                            HttpServletResponse.SC_NOT_IMPLEMENTED,
+                            "Anonymous request are not yet supported"
+                        );
+                    } catch (IOException e) {/* IGNORE */}
+                } else {
+
+                    // Authenticate the user
+                    AuthUser authUser = _elasticRestClient.authenticate(authDirective);
+
+                }
+
                 ctx.getResponse().setContentType("application/json");
                 try (final PrintWriter w = ctx.getResponse().getWriter()) {
                     w.printf("HttpKind: %s, path: %s, query: %s", httpKind, path, request.getQueryString()); // TODO

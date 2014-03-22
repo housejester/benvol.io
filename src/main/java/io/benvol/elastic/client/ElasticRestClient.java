@@ -3,6 +3,11 @@ package io.benvol.elastic.client;
 import io.benvol.BenvolioSettings;
 import io.benvol.model.ElasticHttpRequest;
 import io.benvol.model.ElasticHttpResponse;
+import io.benvol.model.HttpKind;
+import io.benvol.model.auth.AuthDirective;
+import io.benvol.model.auth.AuthUser;
+import io.benvol.model.auth.IdentifyPredicate;
+import io.benvol.util.JSON;
 import io.benvol.util.KeyValuePair;
 
 import java.io.IOException;
@@ -24,16 +29,24 @@ import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.log4j.Logger;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.base.Charsets;
+import com.google.common.base.Joiner;
 import com.google.common.io.CharStreams;
 
 public class ElasticRestClient {
 
     private static final Logger LOG = Logger.getLogger(ElasticRestClient.class);
 
+    private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
+
+    private final BenvolioSettings _settings;
     private final List<KeyValuePair<String, Integer>> _elasticHosts;
 
     public ElasticRestClient(BenvolioSettings settings) {
+        _settings = settings;
         _elasticHosts = settings.getElasticHosts();
     }
 
@@ -94,5 +107,71 @@ public class ElasticRestClient {
         } else {
             throw new RuntimeException("no elastic hosts to choose from");
         }
+    }
+
+    public AuthUser authenticate(AuthDirective authDirective) {
+
+        // Create an elastic request to identify this user
+        ElasticHttpRequest request = new ElasticHttpRequest(
+            HttpKind.POST,
+            String.format(
+                "/%s/%s/_search",
+                Joiner.on(',').join(_settings.getIndexNames()),
+                _settings.getUserRemoteSchema().getElasticTypeName()
+            ),
+            createSingleUserQuery(authDirective)
+        );
+
+        // Execute the query to find the user indicated in this AuthDirective
+        execute(request, new ElasticResponseCallback() {
+            public void execute(ElasticHttpResponse response) {
+                // TODO
+            }
+        });
+
+        // Query for groups
+        // Query for roles
+        // Query for session
+    }
+
+    private ObjectNode createSingleUserQuery(AuthDirective authDirective) {
+        return JSON.map(
+            JSON.pair("from", 0),
+            JSON.pair("size", 1),
+            JSON.pair("query",
+                JSON.uniMap(
+                    "filtered", JSON.map(
+                        JSON.pair("query", JSON.uniMap("match_all", JSON.map())),
+                        JSON.pair("filter", createUserFilter(authDirective))
+                    )
+                )
+            )
+        );
+    }
+
+    private ObjectNode createUserFilter(AuthDirective authDirective) {
+        ObjectNode filter = JSON.map();
+        List<IdentifyPredicate> predicates = authDirective.getIdentifyPredicates();
+        if (predicates.isEmpty()) {
+            // TODO: return an anonymous AuthUser
+        } else if (predicates.size() == 1) {
+            IdentifyPredicate predicate = predicates.get(0);
+            filter = JSON.uniMap(
+                "term", JSON.map(
+                    JSON.pair(predicate.getQualifiedField(), predicate.getOperand())
+                )
+            );
+        } else {
+            ArrayNode andClauses = JSON.list();
+            for (IdentifyPredicate predicate : predicates) {
+                andClauses.add(JSON.uniMap(
+                    "term", JSON.map(
+                        JSON.pair(predicate.getQualifiedField(), predicate.getOperand())
+                    )
+                ));
+            }
+            filter = JSON.uniMap("and", andClauses);
+        }
+        return filter;
     }
 }

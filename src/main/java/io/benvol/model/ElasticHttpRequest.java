@@ -1,12 +1,15 @@
 package io.benvol.model;
 
 import io.benvol.model.auth.AuthDirective;
+import io.benvol.util.JSON;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 
 import javax.servlet.http.HttpServletRequest;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import com.google.common.collect.Lists;
 
 public class ElasticHttpRequest extends StandardHttpRequest {
@@ -31,7 +34,44 @@ public class ElasticHttpRequest extends StandardHttpRequest {
 
         // Determining the ElasticOperator can be tricky, since it relies on an
         // interplay between the http kind, path, and querystring params.
-        _operator = ElasticOperator.infer(httpKind, pathParts, super.getParams());
+        _operator = ElasticOperator.infer(getHttpKind(), pathParts, super.getParams());
+    }
+
+    public ElasticHttpRequest(HttpKind httpKind, String path, Map<String, String[]> params, Map<String, String[]> headers, String requestBody) {
+        super(httpKind, path, params, headers, requestBody);
+
+        // Use the HTTP path to determine the index and type names. The first path-part represents
+        // one or more index names, while the second path-part represents one or more type names.
+        String[] pathParts = parsePathIntoParts(super.getPath());
+        _indexNames = parseCommaDelimitedNames(pathParts, 0);
+        _typeNames = parseCommaDelimitedNames(pathParts, 1);
+
+        // Build an AuthDirective from the http request headers.
+        _authDirective = new AuthDirective(super.getHeaders());
+
+        // Determining the ElasticOperator can be tricky, since it relies on an
+        // interplay between the http kind, path, and querystring params.
+        _operator = ElasticOperator.infer(getHttpKind(), pathParts, super.getParams());
+    }
+
+    public ElasticHttpRequest(HttpKind httpKind, String path, String requestBody) {
+        this(
+            httpKind,
+            path,
+            Collections.<String, String[]>emptyMap(),
+            Collections.<String, String[]>emptyMap(),
+            requestBody
+        );
+    }
+
+    public ElasticHttpRequest(HttpKind httpKind, String path, JsonNode json) {
+        this(
+            httpKind,
+            path,
+            Collections.<String, String[]>emptyMap(),
+            Collections.<String, String[]>emptyMap(),
+            JSON.stringify(json)
+        );
     }
 
     public List<String> getIndexNames() {

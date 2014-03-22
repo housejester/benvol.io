@@ -1,6 +1,7 @@
 package io.benvol.model;
 
 import java.io.IOException;
+import java.net.URLEncoder;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -16,26 +17,27 @@ public class StandardHttpRequest {
     private final HttpKind _httpKind;
     private final String _path;
 
-    private final String _queryString;
     private final Map<String, String[]> _params;
     private final Map<String, String[]> _headers;
 
     private final String _requestBody;
 
     public StandardHttpRequest(HttpKind httpKind, HttpServletRequest request) {
-        _httpKind = httpKind;
-        _queryString = request.getQueryString();
-        _path = request.getServletPath();
+        this(httpKind, request.getServletPath(), request.getParameterMap(), readHeaders(request), readRequestBody(request));
+    }
 
-        _params = request.getParameterMap();
-        _headers = readHeaders(request);
-        _requestBody = readRequestBody(request);
+    public StandardHttpRequest(HttpKind httpKind, String path, Map<String, String[]> params, Map<String, String[]> headers, String requestBody) {
+        _httpKind = httpKind;
+        _path = path;
+        _params = params;
+        _headers = headers;
+        _requestBody = requestBody;
     }
 
     public String makeUrl(String hostname, int port) {
         return String.format(
-            "https://%s:%s/%s?%s",
-            hostname, port, _path, _queryString
+            "https://%s:%s/%s%s",
+            hostname, port, _path, getQueryString()
         );
     }
 
@@ -45,10 +47,6 @@ public class StandardHttpRequest {
 
     public String getPath() {
         return _path;
-    }
-
-    public String getQueryString() {
-        return _queryString;
     }
 
     public Map<String, String[]> getParams() {
@@ -63,7 +61,29 @@ public class StandardHttpRequest {
         return _requestBody;
     }
 
-    private String readRequestBody(HttpServletRequest request) {
+    public String getQueryString() {
+        if (_params.isEmpty()) {
+            return "";
+        } else {
+            StringBuilder b = new StringBuilder("?");
+            for (Map.Entry<String, String[]> entry : _params.entrySet()) {
+                try {
+                    String urlEncodedKey = URLEncoder.encode(entry.getKey(), "UTF-8");
+                    for (String value : entry.getValue()) {
+                        String urlEncodedValue = URLEncoder.encode(value, "UTF-8");
+                        b.append(urlEncodedKey);
+                        b.append("=");
+                        b.append(urlEncodedValue);
+                    }
+                } catch (IOException e) {
+                    Throwables.propagate(e);
+                }
+            }
+            return b.toString();
+        }
+    }
+
+    private static String readRequestBody(HttpServletRequest request) {
         String requestBody = "";
         if (request.getContentLength() > 0) {
             try {

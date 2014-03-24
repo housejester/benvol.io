@@ -7,6 +7,7 @@ import io.benvol.model.HttpKind;
 import io.benvol.model.auth.AuthDirective;
 import io.benvol.model.auth.AuthUser;
 import io.benvol.model.auth.IdentifyPredicate;
+import io.benvol.model.auth.remote.UserRemoteSchema;
 import io.benvol.util.JSON;
 import io.benvol.util.KeyValuePair;
 
@@ -14,6 +15,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.List;
+import java.util.Set;
 
 import org.apache.http.Header;
 import org.apache.http.HttpEntity;
@@ -34,6 +36,7 @@ import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.base.Charsets;
 import com.google.common.base.Joiner;
+import com.google.common.collect.Sets;
 import com.google.common.io.CharStreams;
 
 public class ElasticRestClient {
@@ -45,9 +48,14 @@ public class ElasticRestClient {
     private final BenvolioSettings _settings;
     private final List<KeyValuePair<String, Integer>> _elasticHosts;
 
+    private final String _userTypeName;
+    private final Set<String> _userIdentityFields;
+
     public ElasticRestClient(BenvolioSettings settings) {
         _settings = settings;
         _elasticHosts = settings.getElasticHosts();
+        _userTypeName = _settings.getUserRemoteSchema().getElasticTypeName();
+        _userIdentityFields = Sets.newHashSet(settings.getUserRemoteSchema().getIdentityFieldNames());
     }
 
     public void execute(ElasticHttpRequest request, ElasticResponseCallback callback) {
@@ -105,29 +113,38 @@ public class ElasticRestClient {
             int index = (int) Math.floor(Math.random() * elasticHostCount);
             return _elasticHosts.get(index);
         } else {
+            // TODO: CUSTOM EXCEPTION TYPE
             throw new RuntimeException("no elastic hosts to choose from");
         }
     }
 
     public AuthUser authenticate(AuthDirective authDirective) {
 
+        // Make sure that the user is only attempting to identify herself using
+        // an officially-sanctioned user-type-name and identity-field-names.
+        for (IdentifyPredicate predicate : authDirective.getIdentifyPredicates()) {
+            if (
+                !_userTypeName.equals(predicate.getUserType()) ||
+                !_userIdentityFields.contains(predicate.getQualifiedField())
+            ) {
+                // TODO: CUSTOM EXCEPTION TYPE
+                throw new RuntimeException("authentication failure");
+            }
+        }
+
         // Create an elastic request to identify this user
-        ElasticHttpRequest request = new ElasticHttpRequest(
+        UserRemoteSchema userRemoteSchema = _settings.getUserRemoteSchema();
+        ElasticHttpRequest userRequest = new ElasticHttpRequest(
             HttpKind.POST,
             String.format(
                 "/%s/%s/_search",
                 Joiner.on(',').join(_settings.getIndexNames()),
-                _settings.getUserRemoteSchema().getElasticTypeName()
+                userRemoteSchema.getElasticTypeName()
             ),
             createSingleUserQuery(authDirective)
         );
 
-        // Execute the query to find the user indicated in this AuthDirective
-        execute(request, new ElasticResponseCallback() {
-            public void execute(ElasticHttpResponse response) {
-                // TODO
-            }
-        });
+        // Confirm the user identity using a salted-passhash
 
         // Query for groups
         // Query for roles

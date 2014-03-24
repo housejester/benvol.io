@@ -144,6 +144,18 @@ public class ElasticRestClient {
             createSingleUserQuery(authDirective)
         );
 
+        // Execute the query to find the user indicated in this AuthDirective
+        ElasticHitCollector userHitCollector = new ElasticHitCollector();
+        execute(userRequest, userHitCollector);
+
+        // The IDENTIFY predicate of the AuthDirective must return exactly ONE user. If this predicate
+        // could possibly apply to more than one user, then the entire request must fail.
+        int userResultCount = userHitCollector.getTotalHitCount();
+        if (userResultCount != 1) {
+            // TODO: CUSTOM EXCEPTION TYPE
+            throw new RuntimeException("authentication failure");
+        }
+
         // Confirm the user identity using a salted-passhash
 
         // Query for groups

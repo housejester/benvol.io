@@ -6,9 +6,16 @@ import io.benvol.model.ElasticHttpResponse;
 import io.benvol.model.HttpKind;
 import io.benvol.model.auth.AuthDirective;
 import io.benvol.model.auth.AuthUser;
+import io.benvol.model.auth.ConfirmKind;
+import io.benvol.model.auth.ConfirmPredicate;
 import io.benvol.model.auth.IdentifyPredicate;
+import io.benvol.model.auth.remote.GroupRemoteModel;
+import io.benvol.model.auth.remote.RoleRemoteModel;
+import io.benvol.model.auth.remote.SessionRemoteModel;
+import io.benvol.model.auth.remote.UserRemoteModel;
 import io.benvol.model.auth.remote.UserRemoteSchema;
 import io.benvol.util.JSON;
+import io.benvol.util.JsonUtil;
 import io.benvol.util.KeyValuePair;
 
 import java.io.IOException;
@@ -36,7 +43,9 @@ import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.base.Charsets;
 import com.google.common.base.Joiner;
+import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
+import com.google.common.hash.Hashing;
 import com.google.common.io.CharStreams;
 
 public class ElasticRestClient {
@@ -113,8 +122,7 @@ public class ElasticRestClient {
             int index = (int) Math.floor(Math.random() * elasticHostCount);
             return _elasticHosts.get(index);
         } else {
-            // TODO: CUSTOM EXCEPTION TYPE
-            throw new RuntimeException("no elastic hosts to choose from");
+            throw new RuntimeException("no elastic hosts to choose from"); // TODO: CUSTOM EXCEPTION TYPE
         }
     }
 
@@ -127,8 +135,7 @@ public class ElasticRestClient {
                 !_userTypeName.equals(predicate.getUserType()) ||
                 !_userIdentityFields.contains(predicate.getQualifiedField())
             ) {
-                // TODO: CUSTOM EXCEPTION TYPE
-                throw new RuntimeException("authentication failure");
+                throw new RuntimeException("authentication failure"); // TODO: CUSTOM EXCEPTION TYPE
             }
         }
 
@@ -152,15 +159,46 @@ public class ElasticRestClient {
         // could possibly apply to more than one user, then the entire request must fail.
         int userResultCount = userHitCollector.getTotalHitCount();
         if (userResultCount != 1) {
-            // TODO: CUSTOM EXCEPTION TYPE
-            throw new RuntimeException("authentication failure");
+            throw new RuntimeException("authentication failure"); // TODO: CUSTOM EXCEPTION TYPE
         }
 
-        // Confirm the user identity using a salted-passhash
+        // The rest of the authentication logic is based upon the user JSON object
+        UserRemoteModel user = new UserRemoteModel(userHitCollector.getHits().get(0), userRemoteSchema);
 
-        // Query for groups
-        // Query for roles
-        // Query for session
+        // Confirm the user's identity
+        List<ConfirmPredicate> confirmPredicates = authDirective.getConfirmPredicates();
+        if (confirmPredicates.isEmpty()) {
+            throw new RuntimeException("authentication failure"); // TODO: CUSTOM EXCEPTION TYPE
+        }
+        for (ConfirmPredicate predicate : confirmPredicates) {
+            ConfirmKind confirmKind = predicate.getConfirmKind();
+            if (confirmKind.equals(ConfirmKind.PASSHASH)) {
+
+                // Confirm the user identity using a salted-passhash
+                String storedSalt = user.getSalt();
+                String storedDoublePasshash = user.getPasshash();
+
+                String allegedSinglePasshash = predicate.getOperand();
+                String saltedPassword = storedSalt + allegedSinglePasshash;
+                String allededDoublePasshash = Hashing.sha256().hashString(saltedPassword, Charsets.UTF_8).toString();
+                if (!allededDoublePasshash.equals(storedDoublePasshash)) {
+                    throw new RuntimeException("authentication failure"); // TODO: CUSTOM EXCEPTION TYPE
+                }
+
+            } else if (confirmKind.equals(ConfirmKind.TOKEN)) {
+                // TODO: confirm the user by searching for a session with the given token
+                throw new RuntimeException("Token-based authentication has not yet been implemented");
+            }
+        }
+
+        // If we reach this point, the user has been successfully identified, and their identity has been confirmed.
+
+        // TODO: determine actual group membership and resolve roles
+        List<GroupRemoteModel> groups = Lists.newArrayList();
+        List<RoleRemoteModel> roles = Lists.newArrayList();
+        SessionRemoteModel session = null;
+
+        return new AuthUser(user, groups, roles, session);
     }
 
     private ObjectNode createSingleUserQuery(AuthDirective authDirective) {

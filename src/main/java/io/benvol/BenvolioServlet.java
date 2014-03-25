@@ -5,9 +5,11 @@ import io.benvol.model.ElasticHttpRequest;
 import io.benvol.model.HttpKind;
 import io.benvol.model.auth.AuthDirective;
 import io.benvol.model.auth.AuthUser;
+import io.benvol.model.policy.Policy;
 
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -105,6 +107,9 @@ class BenvolioServlet extends HttpServlet {
 
                     // Authenticate the user
                     AuthUser authUser = _elasticRestClient.authenticate(authDirective);
+
+                    // Load policies that apply to this user and this request
+                    List<Policy> policies = _elasticRestClient.findPoliciesFor(authUser, elasticHttpRequest);
 
                 }
 

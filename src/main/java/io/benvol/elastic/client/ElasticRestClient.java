@@ -14,8 +14,8 @@ import io.benvol.model.auth.remote.RoleRemoteModel;
 import io.benvol.model.auth.remote.SessionRemoteModel;
 import io.benvol.model.auth.remote.UserRemoteModel;
 import io.benvol.model.auth.remote.UserRemoteSchema;
+import io.benvol.model.policy.Policy;
 import io.benvol.util.JSON;
-import io.benvol.util.JsonUtil;
 import io.benvol.util.KeyValuePair;
 
 import java.io.IOException;
@@ -240,5 +240,9 @@ public class ElasticRestClient {
             filter = JSON.uniMap("and", andClauses);
         }
         return filter;
+    }
+
+    public List<Policy> findPoliciesFor(AuthUser authUser, ElasticHttpRequest elasticHttpRequest) {
+        throw new RuntimeException("NOT IMPLEMENTED"); // TODO
     }
 }

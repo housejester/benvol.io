@@ -5,9 +5,12 @@ import io.benvol.model.ElasticHttpRequest;
 import io.benvol.model.HttpKind;
 import io.benvol.model.auth.AnonUser;
 import io.benvol.model.auth.AuthDirective;
+import io.benvol.model.auth.AuthUser;
 import io.benvol.model.auth.IdentifyPredicate;
 import io.benvol.model.auth.ResolvedUser;
+import io.benvol.model.auth.remote.GroupRemoteModel;
 import io.benvol.model.auth.remote.GroupRemoteSchema;
+import io.benvol.model.auth.remote.RoleRemoteModel;
 import io.benvol.model.auth.remote.RoleRemoteSchema;
 import io.benvol.model.auth.remote.SessionRemoteSchema;
 import io.benvol.model.auth.remote.UserRemoteSchema;
@@ -128,6 +131,71 @@ public class ElasticRequestFactory {
                 createIpAddressFilter(anon)
             )
         );
+    }
+
+    private ObjectNode createAuthUserPolicyQuery(AuthUser anon) {
+        return JSON.map(
+            JSON.pair("from", 0),
+            JSON.pair("size", 10_000), // TODO: set a configurable maximum number of policies per query?
+            JSON.pair("query",
+                JSON.uniMap(
+                    "filtered", JSON.map(
+                        JSON.pair("query", JSON.uniMap("match_all", JSON.map())),
+                        JSON.pair("filter", createAuthUserPolicyFilter(anon))
+                    )
+                )
+            )
+        );
+    }
+
+    private ObjectNode createAuthUserPolicyFilter(AuthUser user) {
+        ArrayNode clauses = JSON.list(
+            createIpAddressFilter(user),
+            createUserIdFilter(user)
+        );
+        ObjectNode groupIdFilter = createGroupIdFilter(user);
+        if (groupIdFilter != null) {
+            clauses.add(groupIdFilter);
+        }
+        ObjectNode roleIdFilter = createRoleIdFilter(user);
+        if (roleIdFilter != null) {
+            clauses.add(roleIdFilter);
+        }
+        return JSON.uniMap("or", clauses);
+    }
+
+    private ObjectNode createUserIdFilter(AuthUser user) {
+        return JSON.uniMap("term", JSON.uniMap("user_ids", user.getUser().getUserId()));
+    }
+
+    private ObjectNode createGroupIdFilter(AuthUser user) {
+        List<GroupRemoteModel> groups = user.getGroups();
+        if (groups.isEmpty()) {
+            return null;
+        } else if (groups.size() == 1) {
+            return JSON.uniMap("term", JSON.uniMap("group_ids", groups.get(0).getGroupId()));
+        } else {
+            ArrayNode groupIds = JSON.list();
+            for (GroupRemoteModel group : groups) {
+                groupIds.add(group.getGroupId());
+            }
+            return JSON.uniMap("terms", JSON.uniMap("group_ids", groupIds));
+        }
+    }
+
+    private ObjectNode createRoleIdFilter(AuthUser user) {
+        List<RoleRemoteModel> roles = user.getRoles();
+        if (roles.isEmpty()) {
+            return null;
+        } else if (roles.size() == 1) {
+            return JSON.uniMap("term", JSON.uniMap("role_ids", roles.get(0).getRoleId()));
+        } else {
+            ArrayNode roleIds = JSON.list();
+            for (RoleRemoteModel role : roles) {
+                roleIds.add(role.getRoleId());
+            }
+            return JSON.uniMap("terms", JSON.uniMap("role_ids", roleIds));
+        }
     }
 
     private ObjectNode createIpAddressFilter(ResolvedUser user) {

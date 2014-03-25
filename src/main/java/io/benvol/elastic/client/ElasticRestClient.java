@@ -3,8 +3,6 @@ package io.benvol.elastic.client;
 import io.benvol.BenvolioSettings;
 import io.benvol.model.ElasticHttpRequest;
 import io.benvol.model.ElasticHttpResponse;
-import io.benvol.model.auth.ResolvedUser;
-import io.benvol.model.policy.Policy;
 import io.benvol.util.KeyValuePair;
 
 import java.io.IOException;
@@ -96,15 +94,5 @@ public class ElasticRestClient {
         } else {
             throw new RuntimeException("no elastic hosts to choose from"); // TODO: CUSTOM EXCEPTION TYPE
         }
-    }
-
-    public List<Policy> findPoliciesFor(ResolvedUser authUser, ElasticHttpRequest elasticHttpRequest) {
-        // TODO: Perform an elasticsearch query to find candidate policies for this (potentially
-        // anonymous) user and for this request. Then, eliminate candidate policies that don't
-        // specifically apply to this request. This two-phase candidate-elimination process is
-        // necessary because policies contain certain types of predicates that can't be matched
-        // via any kind of elasticsearch query. (For example, using a regex in an indexed policy
-        // to match against a string literal in a user query.)
-        throw new RuntimeException("NOT IMPLEMENTED"); // TODO
     }
 }

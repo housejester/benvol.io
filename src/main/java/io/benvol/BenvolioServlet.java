@@ -109,7 +109,7 @@ class BenvolioServlet extends HttpServlet {
                     );
 
                     // Load policies that apply to this user and this request
-                    List<Policy> policies = _elasticRestClient.findPoliciesFor(user, elasticHttpRequest);
+                    List<Policy> policies = user.findPolicies(_elasticRestClient, _elasticQueryFactory);
 
                     ctx.getResponse().setContentType("application/json");
                     try (final PrintWriter w = ctx.getResponse().getWriter()) {

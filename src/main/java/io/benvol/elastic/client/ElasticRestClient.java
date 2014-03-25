@@ -38,7 +38,6 @@ import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.log4j.Logger;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.base.Charsets;
@@ -51,8 +50,6 @@ import com.google.common.io.CharStreams;
 public class ElasticRestClient {
 
     private static final Logger LOG = Logger.getLogger(ElasticRestClient.class);
-
-    private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
     private final BenvolioSettings _settings;
     private final List<KeyValuePair<String, Integer>> _elasticHosts;

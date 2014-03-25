@@ -8,8 +8,8 @@ public class SessionRemoteModel extends AbstractRemoteModel {
 
     // TODO: add field & getter for role names
 
-    public SessionRemoteModel(ObjectNode json, SessionRemoteSchema userRemoteSchema) {
-        super(json, userRemoteSchema);
+    public SessionRemoteModel(ObjectNode json, SessionRemoteSchema sessionRemoteSchema) {
+        super(json, sessionRemoteSchema);
     }
 
     public String getRoleId() {

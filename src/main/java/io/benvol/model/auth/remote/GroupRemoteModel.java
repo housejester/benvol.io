@@ -9,8 +9,8 @@ public class GroupRemoteModel extends AbstractRemoteModel {
     // TODO: add field & getter for group names
     // TODO: add roles...
 
-    public GroupRemoteModel(ObjectNode json, GroupRemoteSchema userRemoteSchema) {
-        super(json, userRemoteSchema);
+    public GroupRemoteModel(ObjectNode json, GroupRemoteSchema groupRemoteSchema) {
+        super(json, groupRemoteSchema);
     }
 
     public String getGroupId() {

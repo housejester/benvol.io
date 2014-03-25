@@ -4,6 +4,7 @@ import io.benvol.model.auth.remote.GroupRemoteSchema;
 import io.benvol.model.auth.remote.RoleRemoteSchema;
 import io.benvol.model.auth.remote.SessionRemoteSchema;
 import io.benvol.model.auth.remote.UserRemoteSchema;
+import io.benvol.model.policy.PolicyRemoteSchema;
 import io.benvol.util.KeyValuePair;
 
 import java.util.Collections;
@@ -28,6 +29,7 @@ public class BenvolioSettings {
     private final GroupRemoteSchema _groupRemoteSchema;
     private final SessionRemoteSchema _sessionRemoteSchema;
     private final RoleRemoteSchema _roleRemoteSchema;
+    private final PolicyRemoteSchema _policyRemoteSchema;
 
     public BenvolioSettings(ObjectNode json) {
 
@@ -58,6 +60,7 @@ public class BenvolioSettings {
         _groupRemoteSchema = GroupRemoteSchema.fromConfigJson(remoteSchemas.get("group"));
         _sessionRemoteSchema = SessionRemoteSchema.fromConfigJson(remoteSchemas.get("session"));
         _roleRemoteSchema = RoleRemoteSchema.fromConfigJson(remoteSchemas.get("role"));
+        _policyRemoteSchema = PolicyRemoteSchema.fromConfigJson(remoteSchemas.get("policy"));
     }
 
     public String getEnvironment() {
@@ -94,6 +97,10 @@ public class BenvolioSettings {
 
     public RoleRemoteSchema getRoleRemoteSchema() {
         return _roleRemoteSchema;
+    }
+
+    public PolicyRemoteSchema getPolicyRemoteSchema() {
+        return _policyRemoteSchema;
     }
 
 }

@@ -36,7 +36,7 @@
       "session" : {
         "type_name" : "session",
         "id_field_name" : "id",
-                "id_field_kind" : "string",
+        "id_field_kind" : "string",
         "user_id_field_name" : "user_id",
         "token_field_name" : "token"
       },
@@ -45,6 +45,11 @@
         "id_field_name" : "id",
         "id_field_kind" : "string",
         "name_field_name" : "name"
+      },
+      "policy" : {
+        "type_name" : "policy",
+        "id_field_name" : "id",
+        "id_field_kind" : "string"
       }
     }
   }

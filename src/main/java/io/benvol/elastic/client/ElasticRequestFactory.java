@@ -134,15 +134,18 @@ public class ElasticRequestFactory {
         Inet4Address ip4Address = InetAddresses.getCoercedIPv4Address(user.getIpAddress());
         String ip4AddresString = ip4Address.getHostAddress();
         return JSON.uniMap(
-            "nested", JSON.map(
-                JSON.pair("path", "ip_ranges"),
-                JSON.pair("filter", JSON.pair(
-                    "and", JSON.list(
-                        JSON.uniMap("range", JSON.uniMap("ip_ranges.min", JSON.uniMap("lte", ip4AddresString))),
-                        JSON.uniMap("range", JSON.uniMap("ip_ranges.max", JSON.uniMap("gte", ip4AddresString)))
+            "or", JSON.list(
+                "nested", JSON.map(
+                    JSON.pair("path", "match.ip_ranges"),
+                    JSON.pair("filter", JSON.pair(
+                        "and", JSON.list(
+                            JSON.uniMap("range", JSON.uniMap("match.ip_ranges.min", JSON.uniMap("lte", ip4AddresString))),
+                            JSON.uniMap("range", JSON.uniMap("match.ip_ranges.max", JSON.uniMap("gte", ip4AddresString)))
+                        )
                     )
-                )
-            ))
+                )),
+                JSON.uniMap("term", JSON.uniMap("match.ip_addresses", ip4AddresString))
+            )
         );
     }
 }

@@ -1,9 +1,9 @@
 package io.benvol.model.auth;
 
 import io.benvol.elastic.client.ElasticHitCollector;
+import io.benvol.elastic.client.ElasticRequestFactory;
 import io.benvol.elastic.client.ElasticRestClient;
 import io.benvol.model.ElasticHttpRequest;
-import io.benvol.model.ElasticRequestFactory;
 import io.benvol.model.auth.remote.GroupRemoteModel;
 import io.benvol.model.auth.remote.RoleRemoteModel;
 import io.benvol.model.auth.remote.SessionRemoteModel;

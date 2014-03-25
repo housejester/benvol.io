@@ -1,8 +1,8 @@
 package io.benvol;
 
+import io.benvol.elastic.client.ElasticRequestFactory;
 import io.benvol.elastic.client.ElasticRestClient;
 import io.benvol.model.ElasticHttpRequest;
-import io.benvol.model.ElasticRequestFactory;
 import io.benvol.model.HttpKind;
 import io.benvol.model.auth.AuthDirective;
 import io.benvol.model.auth.AuthUser;

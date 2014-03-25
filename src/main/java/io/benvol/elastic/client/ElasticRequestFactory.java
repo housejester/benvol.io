@@ -1,8 +1,14 @@
-package io.benvol.model;
+package io.benvol.elastic.client;
 
 import io.benvol.BenvolioSettings;
+import io.benvol.model.ElasticHttpRequest;
+import io.benvol.model.HttpKind;
 import io.benvol.model.auth.AuthDirective;
 import io.benvol.model.auth.IdentifyPredicate;
+import io.benvol.model.auth.remote.GroupRemoteSchema;
+import io.benvol.model.auth.remote.RoleRemoteSchema;
+import io.benvol.model.auth.remote.SessionRemoteSchema;
+import io.benvol.model.auth.remote.UserRemoteSchema;
 import io.benvol.util.JSON;
 
 import java.util.List;
@@ -13,10 +19,19 @@ import com.google.common.base.Joiner;
 
 public class ElasticRequestFactory {
     
-    private final BenvolioSettings _settings;
-    
+    private final List<String> _indexNames;
+
+    private final UserRemoteSchema _userRemoteSchema;
+    private final GroupRemoteSchema _groupRemoteSchema;
+    private final SessionRemoteSchema _sessionRemoteSchema;
+    private final RoleRemoteSchema _roleRemoteSchema;
+
     public ElasticRequestFactory(BenvolioSettings settings) {
-        _settings = settings;
+        _indexNames = settings.getIndexNames();
+        _userRemoteSchema = settings.getUserRemoteSchema();
+        _groupRemoteSchema = settings.getGroupRemoteSchema();
+        _sessionRemoteSchema = settings.getSessionRemoteSchema();
+        _roleRemoteSchema = settings.getRoleRemoteSchema();
     }
     
     public ElasticHttpRequest createSingleUserElasticRequest(AuthDirective authDirective) {
@@ -24,8 +39,8 @@ public class ElasticRequestFactory {
             HttpKind.POST,
             String.format(
                 "/%s/%s/_search",
-                Joiner.on(',').join(_settings.getIndexNames()),
-                _settings.getUserRemoteSchema().getElasticTypeName()
+                Joiner.on(',').join(_indexNames),
+                _userRemoteSchema.getElasticTypeName()
             ),
             createSingleUserQuery(authDirective)
         );

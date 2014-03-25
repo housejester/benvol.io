@@ -186,7 +186,8 @@ public class ElasticRestClient {
                 }
 
             } else if (confirmKind.equals(ConfirmKind.TOKEN)) {
-                // TODO: confirm the user by searching for a session with the given token
+                // TODO: Confirm the user by searching for a session with the given token.
+                // TODO: When & how should sessions be extended?
                 throw new RuntimeException("Token-based authentication has not yet been implemented");
             }
         }

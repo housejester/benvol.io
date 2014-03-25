@@ -2,9 +2,11 @@ package io.benvol;
 
 import io.benvol.elastic.client.ElasticRestClient;
 import io.benvol.model.ElasticHttpRequest;
+import io.benvol.model.ElasticRequestFactory;
 import io.benvol.model.HttpKind;
 import io.benvol.model.auth.AuthDirective;
 import io.benvol.model.auth.AuthUser;
+import io.benvol.model.auth.remote.UserRemoteSchema;
 import io.benvol.model.policy.Policy;
 
 import java.io.IOException;
@@ -29,11 +31,15 @@ class BenvolioServlet extends HttpServlet {
     private static final String UNSUPPORTED_HTTP_KIND = "Unsupported HTTP method kind: %s";
 
     private final ExecutorService _threadPool;
+    private final UserRemoteSchema _userRemoteSchema;
     private final ElasticRestClient _elasticRestClient;
+    private final ElasticRequestFactory _elasticQueryFactory;
 
     public BenvolioServlet(BenvolioSettings settings) {
         _threadPool = Executors.newFixedThreadPool(settings.getThreadPoolSize());;
+        _userRemoteSchema = settings.getUserRemoteSchema();
         _elasticRestClient = new ElasticRestClient(settings);
+        _elasticQueryFactory = new ElasticRequestFactory(settings);
     }
 
     @Override
@@ -106,7 +112,9 @@ class BenvolioServlet extends HttpServlet {
                 } else {
 
                     // Authenticate the user
-                    AuthUser authUser = _elasticRestClient.authenticate(authDirective);
+                    AuthUser authUser = authDirective.authenticate(
+                        _elasticRestClient, _userRemoteSchema, _elasticQueryFactory
+                    );
 
                     // Load policies that apply to this user and this request
                     List<Policy> policies = _elasticRestClient.findPoliciesFor(authUser, elasticHttpRequest);

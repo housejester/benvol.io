@@ -3,13 +3,14 @@ package io.benvol.model.auth.remote;
 import io.benvol.util.JsonUtil;
 
 import java.util.Collections;
-import java.util.List;
+import java.util.Set;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import com.google.common.collect.Sets;
 
 public class UserRemoteSchema extends AbstractRemoteSchema {
 
-    private final List<String> _identityFieldNames;
+    private final Set<String> _identityFieldNames;
     private final String _roleIdsFieldName;
     private final String _groupIdsFieldName;
 
@@ -20,21 +21,21 @@ public class UserRemoteSchema extends AbstractRemoteSchema {
         String elasticTypeName,
         String idFieldName,
         String idFieldKind,
-        List<String> identityFieldNames,
+        Set<String> identityFieldNames,
         String roleIdsFieldName,
         String groupIdsFieldName,
         String passhashFieldName,
         String saltFieldName
     ) {
         super(elasticTypeName, idFieldName, idFieldKind);
-        _identityFieldNames = Collections.unmodifiableList(identityFieldNames);
+        _identityFieldNames = Collections.unmodifiableSet(identityFieldNames);
         _roleIdsFieldName = roleIdsFieldName;
         _groupIdsFieldName = groupIdsFieldName;
         _passhashFieldName = passhashFieldName;
         _saltFieldName = saltFieldName;
     }
 
-    public List<String> getIdentityFieldNames() {
+    public Set<String> getIdentityFieldNames() {
         return _identityFieldNames;
     }
 
@@ -59,7 +60,7 @@ public class UserRemoteSchema extends AbstractRemoteSchema {
             json.get("type_name").asText(),
             json.get("id_field_name").asText(),
             json.get("id_field_kind").asText(),
-            JsonUtil.getStringListForKey(json, "identity_fields"),
+            Sets.newHashSet(JsonUtil.getStringListForKey(json, "identity_fields")),
             json.get("role_ids_field_name").asText(),
             json.get("group_ids_field_name").asText(),
             json.get("passhash_field_name").asText(),

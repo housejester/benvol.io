@@ -17,6 +17,7 @@ import io.benvol.model.auth.remote.UserRemoteSchema;
 import io.benvol.model.policy.Policy;
 import io.benvol.util.JSON;
 import io.benvol.util.KeyValuePair;
+import io.benvol.util.RandomString;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -182,9 +183,16 @@ public class ElasticRestClient {
                     throw new RuntimeException("authentication failure"); // TODO: CUSTOM EXCEPTION TYPE
                 }
 
+                // TODO: store a new session in elasticsearch, and return the session TOKEN in the response headers.
+                // TODO: what about session TTL and expiry?
+                String sessionToken = RandomString.generate(64);
+
             } else if (confirmKind.equals(ConfirmKind.TOKEN)) {
                 // TODO: Confirm the user by searching for a session with the given token.
                 // TODO: When & how should sessions be extended?
+                // TODO: Lookup sessions in a local in-memory cache, since these will already
+                // include user/group/role info, saving multiple ElasticSearch round-trips.
+                // TODO: always invalidate expired cache entries immediately before the cache lookup
                 throw new RuntimeException("Token-based authentication has not yet been implemented");
             }
         }
@@ -196,7 +204,12 @@ public class ElasticRestClient {
         List<RoleRemoteModel> roles = Lists.newArrayList();
         SessionRemoteModel session = null;
 
-        return new AuthUser(user, groups, roles, session);
+        AuthUser authUser = new AuthUser(user, groups, roles, session);
+
+        // TODO: Store this authUser in a local cache (keyed by session token), so that subsequent
+        // authentications can be performed without having to issue so many elastic queries.
+
+        return authUser;
     }
 
     private ObjectNode createSingleUserQuery(AuthDirective authDirective) {

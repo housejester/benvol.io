@@ -3,6 +3,7 @@ package io.benvol.model;
 import io.benvol.model.auth.AuthDirective;
 import io.benvol.util.JSON;
 
+import java.net.InetAddress;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -11,6 +12,7 @@ import javax.servlet.http.HttpServletRequest;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.google.common.collect.Lists;
+import com.google.common.net.InetAddresses;
 
 public class ElasticHttpRequest extends StandardHttpRequest {
 
@@ -30,14 +32,15 @@ public class ElasticHttpRequest extends StandardHttpRequest {
         _typeNames = parseCommaDelimitedNames(pathParts, 1);
 
         // Build an AuthDirective from the http request headers.
-        _authDirective = new AuthDirective(super.getHeaders());
+        InetAddress ipAddress = InetAddresses.forString(request.getRemoteAddr());
+        _authDirective = new AuthDirective(ipAddress, super.getHeaders());
 
         // Determining the ElasticOperator can be tricky, since it relies on an
         // interplay between the http kind, path, and querystring params.
         _operator = ElasticOperator.infer(getHttpKind(), pathParts, super.getParams());
     }
 
-    public ElasticHttpRequest(HttpKind httpKind, String path, Map<String, String[]> params, Map<String, String[]> headers, String requestBody) {
+    public ElasticHttpRequest(HttpKind httpKind, InetAddress ipAddress, String path, Map<String, String[]> params, Map<String, String[]> headers, String requestBody) {
         super(httpKind, path, params, headers, requestBody);
 
         // Use the HTTP path to determine the index and type names. The first path-part represents
@@ -47,16 +50,17 @@ public class ElasticHttpRequest extends StandardHttpRequest {
         _typeNames = parseCommaDelimitedNames(pathParts, 1);
 
         // Build an AuthDirective from the http request headers.
-        _authDirective = new AuthDirective(super.getHeaders());
+        _authDirective = new AuthDirective(ipAddress, super.getHeaders());
 
         // Determining the ElasticOperator can be tricky, since it relies on an
         // interplay between the http kind, path, and querystring params.
         _operator = ElasticOperator.infer(getHttpKind(), pathParts, super.getParams());
     }
 
-    public ElasticHttpRequest(HttpKind httpKind, String path, String requestBody) {
+    public ElasticHttpRequest(HttpKind httpKind, InetAddress ipAddress, String path, String requestBody) {
         this(
             httpKind,
+            ipAddress,
             path,
             Collections.<String, String[]>emptyMap(),
             Collections.<String, String[]>emptyMap(),
@@ -64,9 +68,10 @@ public class ElasticHttpRequest extends StandardHttpRequest {
         );
     }
 
-    public ElasticHttpRequest(HttpKind httpKind, String path, JsonNode json) {
+    public ElasticHttpRequest(HttpKind httpKind, InetAddress ipAddress, String path, JsonNode json) {
         this(
             httpKind,
+            ipAddress,
             path,
             Collections.<String, String[]>emptyMap(),
             Collections.<String, String[]>emptyMap(),

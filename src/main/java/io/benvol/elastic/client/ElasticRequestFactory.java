@@ -18,7 +18,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.base.Joiner;
 
 public class ElasticRequestFactory {
-    
+
     private final List<String> _indexNames;
 
     private final UserRemoteSchema _userRemoteSchema;
@@ -33,10 +33,11 @@ public class ElasticRequestFactory {
         _sessionRemoteSchema = settings.getSessionRemoteSchema();
         _roleRemoteSchema = settings.getRoleRemoteSchema();
     }
-    
+
     public ElasticHttpRequest createSingleUserElasticRequest(AuthDirective authDirective) {
         ElasticHttpRequest singleUserRequest = new ElasticHttpRequest(
             HttpKind.POST,
+            null,
             String.format(
                 "/%s/%s/_search",
                 Joiner.on(',').join(_indexNames),

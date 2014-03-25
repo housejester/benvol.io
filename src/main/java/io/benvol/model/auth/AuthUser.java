@@ -5,9 +5,10 @@ import io.benvol.model.auth.remote.RoleRemoteModel;
 import io.benvol.model.auth.remote.SessionRemoteModel;
 import io.benvol.model.auth.remote.UserRemoteModel;
 
+import java.net.InetAddress;
 import java.util.List;
 
-public class AuthUser {
+public class AuthUser extends ResolvedUser {
 
     private final UserRemoteModel _user;
     private final List<GroupRemoteModel> _groups;
@@ -15,15 +16,21 @@ public class AuthUser {
     private final SessionRemoteModel _session;
 
     public AuthUser(
+        InetAddress ipAddress,
         UserRemoteModel user,
         List<GroupRemoteModel> groups,
         List<RoleRemoteModel> roles,
         SessionRemoteModel session
     ) {
+        super(ipAddress);
         _user = user;
         _groups = groups;
         _roles = roles;
         _session = session;
+    }
+
+    public boolean isAnonymous() {
+        return false;
     }
 
     public UserRemoteModel getUser() {

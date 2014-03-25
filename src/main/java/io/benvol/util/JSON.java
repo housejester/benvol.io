@@ -46,7 +46,7 @@ public class JSON {
         }
         return object;
     }
-    
+
     public static JsonNode from(Object value) {
         if (value == null) {
             return NullNode.getInstance();

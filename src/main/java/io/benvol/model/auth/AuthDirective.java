@@ -4,6 +4,7 @@ import io.benvol.elastic.client.ElasticHitCollector;
 import io.benvol.elastic.client.ElasticRequestFactory;
 import io.benvol.elastic.client.ElasticRestClient;
 import io.benvol.model.ElasticHttpRequest;
+import io.benvol.model.auth.fail.AuthFailure;
 import io.benvol.model.auth.remote.GroupRemoteModel;
 import io.benvol.model.auth.remote.RoleRemoteModel;
 import io.benvol.model.auth.remote.SessionRemoteModel;
@@ -11,6 +12,7 @@ import io.benvol.model.auth.remote.UserRemoteModel;
 import io.benvol.model.auth.remote.UserRemoteSchema;
 import io.benvol.util.RandomString;
 
+import java.net.InetAddress;
 import java.util.List;
 import java.util.Map;
 
@@ -19,11 +21,13 @@ import com.google.common.collect.Lists;
 import com.google.common.hash.Hashing;
 
 public class AuthDirective {
-    
-    private List<IdentifyPredicate> _identifyPredicates;
-    private List<ConfirmPredicate> _confirmPredicates;
-    
-    public AuthDirective(Map<String, String[]> headers) {
+
+    private final InetAddress _ipAddress;
+    private final List<IdentifyPredicate> _identifyPredicates;
+    private final List<ConfirmPredicate> _confirmPredicates;
+
+    public AuthDirective(InetAddress ipAddress, Map<String, String[]> headers) {
+        _ipAddress = ipAddress;
         _identifyPredicates = IdentifyPredicate.fromHeaders(headers);
         _confirmPredicates = ConfirmPredicate.fromHeaders(headers);
     }
@@ -40,16 +44,26 @@ public class AuthDirective {
         return _confirmPredicates;
     }
 
-    public AuthUser authenticate(ElasticRestClient client, UserRemoteSchema userRemoteSchema, ElasticRequestFactory elasticQueryFactory) {
+    public ResolvedUser authenticate(ElasticRestClient client, UserRemoteSchema userRemoteSchema, ElasticRequestFactory elasticQueryFactory) {
+
+        // When a user attempts to execute a query without any authentication predicates
+        // in their request header, then we should authenticate that request as an
+        // anonymous user, based on whichever policies allow anonymous requests.
+        if (_identifyPredicates.isEmpty() && _confirmPredicates.isEmpty()) {
+            return new AnonUser(_ipAddress);
+        }
 
         // Make sure that the user is only attempting to identify herself using
         // an officially-sanctioned user-type-name and identity-field-names.
-        for (IdentifyPredicate predicate : getIdentifyPredicates()) {
+        for (IdentifyPredicate predicate : _identifyPredicates) {
             if (
                 !userRemoteSchema.getElasticTypeName().equals(predicate.getUserType()) ||
                 !userRemoteSchema.getIdentityFieldNames().contains(predicate.getQualifiedField())
             ) {
-                throw new RuntimeException("authentication failure"); // TODO: CUSTOM EXCEPTION TYPE
+                throw new AuthFailure(String.format(
+                    "invalid auth key: %s.%s",
+                    predicate.getUserType(), predicate.getQualifiedField()
+                ));
             }
         }
 
@@ -64,7 +78,7 @@ public class AuthDirective {
         // could possibly apply to more than one user, then the entire request must fail.
         int userResultCount = userHitCollector.getTotalHitCount();
         if (userResultCount != 1) {
-            throw new RuntimeException("authentication failure"); // TODO: CUSTOM EXCEPTION TYPE
+            throw new AuthFailure("cannot uniquely identify user");
         }
 
         // The rest of the authentication logic is based upon the user JSON object
@@ -73,7 +87,7 @@ public class AuthDirective {
         // Confirm the user's identity
         List<ConfirmPredicate> confirmPredicates = getConfirmPredicates();
         if (confirmPredicates.isEmpty()) {
-            throw new RuntimeException("authentication failure"); // TODO: CUSTOM EXCEPTION TYPE
+            throw new AuthFailure("cannot confirm user identity");
         }
         for (ConfirmPredicate predicate : confirmPredicates) {
             ConfirmKind confirmKind = predicate.getConfirmKind();
@@ -87,7 +101,7 @@ public class AuthDirective {
                 String saltedPassword = storedSalt + allegedSinglePasshash;
                 String allededDoublePasshash = Hashing.sha256().hashString(saltedPassword, Charsets.UTF_8).toString();
                 if (!allededDoublePasshash.equals(storedDoublePasshash)) {
-                    throw new RuntimeException("authentication failure"); // TODO: CUSTOM EXCEPTION TYPE
+                    throw new AuthFailure("cannot confirm user identity");
                 }
 
                 // TODO: store a new session in elasticsearch, and return the session TOKEN in the response headers.
@@ -111,7 +125,7 @@ public class AuthDirective {
         List<RoleRemoteModel> roles = Lists.newArrayList();
         SessionRemoteModel session = null;
 
-        AuthUser authUser = new AuthUser(user, groups, roles, session);
+        AuthUser authUser = new AuthUser(_ipAddress, user, groups, roles, session);
 
         // TODO: Store this authUser in a local cache (keyed by session token), so that subsequent
         // authentications can be performed without having to issue so many elastic queries.

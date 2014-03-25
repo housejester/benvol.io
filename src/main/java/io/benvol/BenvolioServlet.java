@@ -5,7 +5,8 @@ import io.benvol.elastic.client.ElasticRestClient;
 import io.benvol.model.ElasticHttpRequest;
 import io.benvol.model.HttpKind;
 import io.benvol.model.auth.AuthDirective;
-import io.benvol.model.auth.AuthUser;
+import io.benvol.model.auth.ResolvedUser;
+import io.benvol.model.auth.fail.RequestRejection;
 import io.benvol.model.auth.remote.UserRemoteSchema;
 import io.benvol.model.policy.Policy;
 
@@ -101,33 +102,32 @@ class BenvolioServlet extends HttpServlet {
                 ElasticHttpRequest elasticHttpRequest = new ElasticHttpRequest(httpKind, request);
                 AuthDirective authDirective = elasticHttpRequest.getAuthDirective();
 
-                if (authDirective.isAnonymous()) {
-                    // TODO: implement anonymous requests
-                    try {
-                        ((HttpServletResponse) ctx.getResponse()).sendError(
-                            HttpServletResponse.SC_NOT_IMPLEMENTED,
-                            "Anonymous request are not yet supported"
-                        );
-                    } catch (IOException e) {/* IGNORE */}
-                } else {
-
+                try {
                     // Authenticate the user
-                    AuthUser authUser = authDirective.authenticate(
+                    ResolvedUser user = authDirective.authenticate(
                         _elasticRestClient, _userRemoteSchema, _elasticQueryFactory
                     );
 
                     // Load policies that apply to this user and this request
-                    List<Policy> policies = _elasticRestClient.findPoliciesFor(authUser, elasticHttpRequest);
+                    List<Policy> policies = _elasticRestClient.findPoliciesFor(user, elasticHttpRequest);
 
-                }
+                    ctx.getResponse().setContentType("application/json");
+                    try (final PrintWriter w = ctx.getResponse().getWriter()) {
+                        w.printf("HttpKind: %s, path: %s, query: %s", httpKind, path, request.getQueryString()); // TODO
+                    } catch (IOException e) {
+                        LOG.error(e);
+                    }
 
-                ctx.getResponse().setContentType("application/json");
-                try (final PrintWriter w = ctx.getResponse().getWriter()) {
-                    w.printf("HttpKind: %s, path: %s, query: %s", httpKind, path, request.getQueryString()); // TODO
-                } catch (IOException e) {
-                    LOG.error(e);
+                } catch (RequestRejection rejection) {
+                    HttpServletResponse response = (HttpServletResponse) ctx.getResponse();
+                    try {
+                        response.sendError(rejection.getStatus(), rejection.getMessage());
+                    } catch (IOException e) {
+                        LOG.error("couldn't send http error response", e);
+                    }
+                } finally {
+                    ctx.complete();
                 }
-                ctx.complete();
             }
         });
     }

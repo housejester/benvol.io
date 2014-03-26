@@ -1,0 +1,15 @@
+{
+  "group" : {
+    "_id"             : { "type" : "string", "path" : "id" },
+    "properties"      : {
+
+      "id"            : { "type" : "string", "index" : "not_analyzed", "store" : "false", "include_in_all" : false },
+      "name"          : { "type" : "string", "index" : "not_analyzed", "store" : "false", "include_in_all" : false },
+
+      "parent_id"     : { "type" : "string", "index" : "not_analyzed", "store" : "false", "include_in_all" : false },
+      "ancestor_ids"  : { "type" : "string", "index" : "not_analyzed", "store" : "false", "include_in_all" : false },
+
+      "role_ids"      : { "type" : "string", "index" : "not_analyzed", "store" : "false", "include_in_all" : false }
+    }
+  }
+}

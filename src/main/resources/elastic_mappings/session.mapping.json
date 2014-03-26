@@ -1,0 +1,19 @@
+{
+  "session" : {
+    "_id"             : { "type" : "string", "path" : "token" },
+    "properties"      : {
+
+      "token"         : { "type" : "string", "index" : "not_analyzed", "store" : "false", "include_in_all" : false },
+
+      "user_id"       : { "type" : "string", "index" : "not_analyzed", "store" : "false", "include_in_all" : false },
+
+      "created_at"    : { "type" : "date", "format" : "yyyyMMddHHmmssSSS" },
+      "updated_at"    : { "type" : "date", "format" : "yyyyMMddHHmmssSSS" },
+      "expired_at"    : { "type" : "date", "format" : "yyyyMMddHHmmssSSS" },
+
+      "duration"      : { "type" : "long" },
+      "ongoing"       : { "type" : "boolean" }
+
+    }
+  }
+}

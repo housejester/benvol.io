@@ -58,6 +58,20 @@ public class ElasticRequestFactory {
         return singleUserRequest;
     }
 
+    public ElasticHttpRequest createPolicyElasticRequest(AuthUser user) {
+        ElasticHttpRequest singleUserRequest = new ElasticHttpRequest(
+            HttpKind.POST,
+            null,
+            String.format(
+                "/%s/%s/_search",
+                Joiner.on(',').join(_indexNames),
+                _policyRemoteSchema.getElasticTypeName()
+            ),
+            createAuthUserPolicyQuery(user)
+        );
+        return singleUserRequest;
+    }
+
     public ElasticHttpRequest createSingleUserElasticRequest(AuthDirective authDirective) {
         ElasticHttpRequest singleUserRequest = new ElasticHttpRequest(
             HttpKind.POST,

@@ -1,0 +1,105 @@
+{
+  "policy" : {
+    "_id"                   : { "type" : "string", "path" : "locator" },
+    "properties"            : {
+
+      "locator"             : { "type" : "string", "index" : "not_analyzed", "store" : "false", "include_in_all" : false },
+
+      "about"               : { "properties" : {
+
+        "id"                : { "type" : "string", "index" : "not_analyzed", "store" : "false", "include_in_all" : false },
+        "created_by"        : { "type" : "string", "index" : "not_analyzed", "store" : "false", "include_in_all" : false },
+        "created_at"        : { "type" : "date", "format" : "yyyyMMddHHmmssSSS" },
+
+        "version"           : { "type" : "integer" },
+        "active"            : { "type" : "boolean" },
+
+        "name"              : { "type" : "string", "index" : "not_analyzed", "store" : "false", "include_in_all" : false },
+        "description"       : { "type" : "string", "index" : "analyzed", "store" : "false", "include_in_all" : false }
+
+      }},
+
+      "for"                 : { "type" : "nested", "properties" : {
+
+        "everyone"          : { "type" : "boolean" },
+        "anonymous"         : { "type" : "boolean" },
+        "authenticated"     : { "type" : "boolean" },
+
+        "user_ids"          : { "type" : "string", "index" : "not_analyzed", "store" : "false", "include_in_all" : false },
+        "group_ids"         : { "type" : "string", "index" : "not_analyzed", "store" : "false", "include_in_all" : false },
+        "role_ids"          : { "type" : "string", "index" : "not_analyzed", "store" : "false", "include_in_all" : false },
+
+        "user_names"        : { "type" : "string", "index" : "not_analyzed", "store" : "false", "include_in_all" : false },
+        "group_names"       : { "type" : "string", "index" : "not_analyzed", "store" : "false", "include_in_all" : false },
+        "role_names"        : { "type" : "string", "index" : "not_analyzed", "store" : "false", "include_in_all" : false },
+
+        "emails"            : { "type" : "string", "index" : "not_analyzed", "store" : "false", "include_in_all" : false },
+        "email_matches"     : { "type" : "string", "index" : "not_analyzed", "store" : "false", "include_in_all" : false },
+
+        "ip_addresses"      : { "type" : "ip" },
+
+        "ip_ranges"         : { "type" : "nested", "properties" : {
+          "ip_min"          : { "type" : "ip" },
+          "ip_max"          : { "type" : "ip" }
+        }}
+
+      }},
+
+      "where"               : { "properties" : {
+
+        "http_method"       : { "type" : "string", "index" : "not_analyzed", "store" : "false", "include_in_all" : false },
+
+        "http_path"         : { "type" : "string", "index" : "not_analyzed", "store" : "false", "include_in_all" : false },
+        "http_path_pattern" : { "type" : "string", "index" : "not_analyzed", "store" : "false", "include_in_all" : false },
+
+        "http_param"        : { "type" : "nested", "properties" : {
+          "key"             : { "type" : "string", "index" : "not_analyzed", "store" : "false", "include_in_all" : false },
+          "key_pattern"     : { "type" : "string", "index" : "not_analyzed", "store" : "false", "include_in_all" : false },
+          "val"             : { "type" : "string", "index" : "not_analyzed", "store" : "false", "include_in_all" : false },
+          "val_pattern"     : { "type" : "string", "index" : "not_analyzed", "store" : "false", "include_in_all" : false }
+        }},
+
+        "json"              : { "properties" : {
+
+          "limit"           : { "type" : "nested", "properties" : {
+            "max_bytes"     : { "type" : "integer" },
+            "max_docs"      : { "type" : "integer" },
+            "max_batch_ops" : { "type" : "integer" }
+          }},
+
+          "enforce"         : {
+            "type" : "object",
+            "enabled" : false
+          }
+
+      }},
+
+      "then"                  : { "properties" : {
+
+        "allow"               : { "type" : "boolean" },
+
+        "transform"           : { "type" : "nested", "properties" : {
+          "hide_field"        : { "type" : "string", "index" : "not_analyzed", "store" : "false", "include_in_all" : false }
+        }},
+
+        "throttle"            : { "type" : "nested", "properties" : {
+          "interval_millis"   : { "type" : "long" },
+          "max_requests"      : { "type" : "integer" }
+        }},
+
+        "limit"               : { "type" : "nested", "properties" : {
+          "max_bytes"         : { "type" : "integer" },
+          "max_hits"          : { "type" : "integer" },
+          "max_ids"           : { "type" : "integer" }
+        }},
+
+        "with_rejection"      : { "properties" : {
+          "status_code"       : { "type" : "integer" },
+          "message"           : { "type" : "string", "index" : "analyzed", "store" : "false", "include_in_all" : false }
+        }}
+
+      }}
+
+    }}
+  }}
+}

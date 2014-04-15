@@ -113,7 +113,7 @@ public class ElasticRequestFactory {
     private ObjectNode createFilteredPolicyQuery(ObjectNode filter) {
         return JSON.map(
             JSON.pair("from", 0),
-            JSON.pair("size", 10000), // TODO: set a configurable maximum number of policies per query?
+            JSON.pair("size", 10_000), // TODO: set a configurable maximum number of policies per query?
             JSON.pair("query",
                 JSON.uniMap(
                     "filtered", JSON.map(

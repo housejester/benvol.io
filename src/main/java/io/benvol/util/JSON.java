@@ -34,6 +34,26 @@ public class JSON {
         return array;
     }
 
+    public static ArrayNode listNonNull(Object... values) {
+        ArrayNode array = OBJECT_MAPPER.createArrayNode();
+        for (Object v : values) {
+            if (v!=null) {
+                array.add(from(v));
+            }
+        }
+        return array;
+    }
+
+    public static ObjectNode and(ArrayNode andClauses) {
+        if (andClauses.size() == 0) {
+            return map();
+        }
+        if (andClauses.size() == 1) {
+            return (ObjectNode)andClauses.get(0);
+        }
+        return JSON.uniMap("and", andClauses);
+    }
+
     public static ObjectNode uniMap(String key, Object value) {
         return map(pair(key, value));
     }

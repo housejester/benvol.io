@@ -8,6 +8,7 @@ import io.benvol.model.auth.AuthDirective;
 import io.benvol.model.auth.AuthUser;
 import io.benvol.model.auth.IdentifyPredicate;
 import io.benvol.model.auth.ResolvedUser;
+import io.benvol.model.auth.remote.AbstractRemoteSchema;
 import io.benvol.model.auth.remote.GroupRemoteModel;
 import io.benvol.model.auth.remote.GroupRemoteSchema;
 import io.benvol.model.auth.remote.RoleRemoteModel;
@@ -45,48 +46,18 @@ public class ElasticRequestFactory {
     }
 
     public ElasticHttpRequest createPolicyElasticRequest(AnonUser user) {
-        ElasticHttpRequest singleUserRequest = new ElasticHttpRequest(
-            HttpKind.POST,
-            null,
-            String.format(
-                "/%s/%s/_search",
-                Joiner.on(',').join(_indexNames),
-                _policyRemoteSchema.getElasticTypeName()
-            ),
-            createAnonPolicyQuery(user)
-        );
-        return singleUserRequest;
+        return createRequest(createAnonPolicyQuery(user), _policyRemoteSchema);
     }
 
     public ElasticHttpRequest createPolicyElasticRequest(AuthUser user) {
-        ElasticHttpRequest singleUserRequest = new ElasticHttpRequest(
-            HttpKind.POST,
-            null,
-            String.format(
-                "/%s/%s/_search",
-                Joiner.on(',').join(_indexNames),
-                _policyRemoteSchema.getElasticTypeName()
-            ),
-            createAuthUserPolicyQuery(user)
-        );
-        return singleUserRequest;
+        return createRequest(createAuthUserPolicyQuery(user), _policyRemoteSchema);
     }
 
     public ElasticHttpRequest createSingleUserElasticRequest(AuthDirective authDirective) {
-        ElasticHttpRequest singleUserRequest = new ElasticHttpRequest(
-            HttpKind.POST,
-            null,
-            String.format(
-                "/%s/%s/_search",
-                Joiner.on(',').join(_indexNames),
-                _userRemoteSchema.getElasticTypeName()
-            ),
-            createSingleUserQuery(authDirective)
-        );
-        return singleUserRequest;
+        return createRequest(createSingleUserQuery(authDirective), _userRemoteSchema);
     }
 
-    public ObjectNode createSingleUserQuery(AuthDirective authDirective) {
+    private ObjectNode createSingleUserQuery(AuthDirective authDirective) {
         return JSON.map(
             JSON.pair("from", 0),
             JSON.pair("size", 1),
@@ -102,36 +73,52 @@ public class ElasticRequestFactory {
     }
 
     public ObjectNode createUserFilter(AuthDirective authDirective) {
-        ObjectNode filter = JSON.map();
         List<IdentifyPredicate> predicates = authDirective.getIdentifyPredicates();
-        if (predicates.size() == 1) {
-            IdentifyPredicate predicate = predicates.get(0);
-            filter = JSON.uniMap(
-                "term", JSON.uniMap(predicate.getQualifiedField(), predicate.getOperand())
-            );
-        } else if (!predicates.isEmpty()) {
-            ArrayNode andClauses = JSON.list();
-            for (IdentifyPredicate predicate : predicates) {
-                andClauses.add(JSON.uniMap(
-                    "term", JSON.map(
-                        JSON.pair(predicate.getQualifiedField(), predicate.getOperand())
-                    )
-                ));
-            }
-            filter = JSON.uniMap("and", andClauses);
+        ArrayNode andClauses = JSON.list();
+        for (IdentifyPredicate predicate : predicates) {
+            andClauses.add(predicateClause(predicate));
         }
-        return filter;
+        return JSON.and(andClauses);
+    }
+
+    private ObjectNode predicateClause(IdentifyPredicate predicate) {
+        return JSON.uniMap(
+            "term", JSON.map(
+                JSON.pair(predicate.getQualifiedField(), predicate.getOperand())
+            )
+        );
+    }
+
+    private ElasticHttpRequest createRequest(ObjectNode policyQuery, AbstractRemoteSchema remoteSchema) {
+        return new ElasticHttpRequest(
+            HttpKind.POST,
+            null,
+            String.format(
+                "/%s/%s/_search",
+                Joiner.on(',').join(_indexNames),
+                remoteSchema.getElasticTypeName()
+            ),
+            policyQuery
+        );
     }
 
     private ObjectNode createAnonPolicyQuery(AnonUser anon) {
+        return createFilteredPolicyQuery(createAnonPolicyFilter(anon));
+    }
+
+    private ObjectNode createAuthUserPolicyQuery(AuthUser anon) {
+        return createFilteredPolicyQuery(createAuthUserPolicyFilter(anon));
+    }
+
+    private ObjectNode createFilteredPolicyQuery(ObjectNode filter) {
         return JSON.map(
             JSON.pair("from", 0),
-            JSON.pair("size", 10_000), // TODO: set a configurable maximum number of policies per query?
+            JSON.pair("size", 10000), // TODO: set a configurable maximum number of policies per query?
             JSON.pair("query",
                 JSON.uniMap(
                     "filtered", JSON.map(
                         JSON.pair("query", JSON.uniMap("match_all", JSON.map())),
-                        JSON.pair("filter", createAnonPolicyFilter(anon))
+                        JSON.pair("filter", filter)
                     )
                 )
             )
@@ -147,34 +134,13 @@ public class ElasticRequestFactory {
         );
     }
 
-    private ObjectNode createAuthUserPolicyQuery(AuthUser anon) {
-        return JSON.map(
-            JSON.pair("from", 0),
-            JSON.pair("size", 10_000), // TODO: set a configurable maximum number of policies per query?
-            JSON.pair("query",
-                JSON.uniMap(
-                    "filtered", JSON.map(
-                        JSON.pair("query", JSON.uniMap("match_all", JSON.map())),
-                        JSON.pair("filter", createAuthUserPolicyFilter(anon))
-                    )
-                )
-            )
-        );
-    }
-
     private ObjectNode createAuthUserPolicyFilter(AuthUser user) {
-        ArrayNode clauses = JSON.list(
+        ArrayNode clauses = JSON.listNonNull(
             createIpAddressFilter(user),
-            createUserIdFilter(user)
+            createUserIdFilter(user),
+            createGroupIdFilter(user),
+            createRoleIdFilter(user)
         );
-        ObjectNode groupIdFilter = createGroupIdFilter(user);
-        if (groupIdFilter != null) {
-            clauses.add(groupIdFilter);
-        }
-        ObjectNode roleIdFilter = createRoleIdFilter(user);
-        if (roleIdFilter != null) {
-            clauses.add(roleIdFilter);
-        }
         return JSON.uniMap("or", clauses);
     }
 

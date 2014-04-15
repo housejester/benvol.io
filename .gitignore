@@ -5,6 +5,10 @@
 .project
 .settings
 
+*.iml
+*.ipr
+*.iws
+
 /target
 *.pid
 *.log
